@@ -135,6 +135,9 @@ def simg(pcs, cna, fee, aph, tm, ptg):
 
 # mutation table, Prices coins fees, gen valid ranges
 mtt,pcf,gvr = None,None,None
+
+# load prices from database from date d0
+# to d1, dates are given in secons from epoch
 def loadPrices(d0,d1):
     db = pymysql.connect('localhost','root','root','crypto_prices')
     sql = """ SELECT  a.price as Price
@@ -153,6 +156,8 @@ def loadPrices(d0,d1):
     prices = [ e[0] for e in lines ]
     return prices;
 
+# Initializes gloabal variables
+#
 def init():
     global mtt,pcf,gvr
     mtt = []
@@ -177,6 +182,8 @@ def init():
 
     random.seed(time.time())
 
+# Generates a new random gen
+#
 def randgen():
     gen = []
     gen.append( random.uniform(gvr[0][0],gvr[0][1]) )
@@ -185,14 +192,20 @@ def randgen():
     gen = tuple(gen)
     return gen
 
+# Returns boolean whether the gen value at
+# position i is valid
 def valgen(gen,i):
     vld = gvr[i]
     return gen[i]>=vld[0] and gen[i]<=vld[1]
 
+# Given a gen, calculates the percentage gain
+# during a buy an sell simulation
 def fitness(gen):
     pms = pcf + list(gen)
     return sim(*pms)
 
+# calculates adjacent spicimens to spc
+# modifing the i property of spc wit val
 def getadj(spc, i, val):
     nspc = None
     gn, gen = -spc[0],spc[1]
@@ -204,7 +217,15 @@ def getadj(spc, i, val):
             nspc = ( -ngn, tuple(ngen))
     return nspc
 
-def dfs(u,vis,st):
+# Given a specimen u, generates all
+# adjacent possible specimes
+# vis is used to store visited specimes
+# st is a priority queue for the next
+# specimen to process
+# psm stores perfect specimens with cannot be
+# improved more
+def dfs(u,vis,st,psm):
+    kds = 0
     for i in range(len(u)):
         tbl = mtt[i]
         for val in tbl:
@@ -212,8 +233,14 @@ def dfs(u,vis,st):
             if v!=None  and v not in vis:
                 hp.heappush(st,v)
                 vis.add(u)
-                print(v)
+                kds += 1
+    if kds==0:
+        psm.append(u)
+        print('Perfect specimen:',u,len(st))
 
+# first searches for a random gen
+# with performace greater than zero
+# then using dfs the gen perfonace is
 def search():
     gen = randgen()
     gn = fitness(gen)
@@ -222,21 +249,20 @@ def search():
         gen = randgen()
         gn = fitness(gen)
     spc = (-gn,gen)
-    st = []
+    st,psm = [],[]
     vis = set()
     hp.heappush(st,spc)
     vis.add(spc)
     while len(st)>0:
         u = hp.heappop(st)
-        dfs(u,vis,st)
-        print(len(st),len(vis))
-    return min(vis)
+        dfs(u,vis,st,psm)
+    return psm
 
 def test():
     init()
-    spc = search()
+    psm = search()
+    spc = min(psm)
     pms = pcf + list(spc[1])
-    print(len(pcf),len(spc[1]))
     simg(*pms)
 
 def test2():
