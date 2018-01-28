@@ -133,11 +133,8 @@ def simg(pcs, cna, fee, aph, tm, ptg):
     plt.plot(ems)
     plt.show()
 
-
-mtt = None  # mutation table
-pcf = None  # Prices coins fee
-gvr = None   # gen valid ranges
-
+# mutation table, Prices coins fees, gen valid ranges
+mtt,pcf,gvr = None,None,None
 def loadPrices(d0,d1):
     db = pymysql.connect('localhost','root','root','crypto_prices')
     sql = """ SELECT  a.price as Price
@@ -180,7 +177,6 @@ def init():
 
     random.seed(time.time())
 
-
 def randgen():
     gen = []
     gen.append( random.uniform(gvr[0][0],gvr[0][1]) )
@@ -218,25 +214,7 @@ def dfs(u,vis,st):
                 vis.add(u)
                 print(v)
 
-def prodgen2():
-    gen = randgen()
-    gn = fitness(gen)
-    print('Random searching ...')
-    while gn<=0:
-        gen = randgen()
-        gn = fitness(gen)
-    spc = (gn,gen)
-    st = []
-    vis = set()
-    st.append(spc)
-    while len(st)>0:
-        u = st[-1]
-        del st[-1]
-        dfs(u,vis,st)
-        print(len(st))
-    return max(vis)[1]
-
-def prodgen():
+def search():
     gen = randgen()
     gn = fitness(gen)
     print('Random searching ...')
@@ -256,7 +234,7 @@ def prodgen():
 
 def test():
     init()
-    spc = prodgen()
+    spc = search()
     pms = pcf + list(spc[1])
     print(len(pcf),len(spc[1]))
     simg(*pms)
