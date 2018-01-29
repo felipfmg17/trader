@@ -43,10 +43,6 @@ def binancePriceExtractor(data):
     price = jsonObj['lastPrice']
     return price
 
-def createDBConnection(host,user, password, db_name):
-    db = pymysql.connect(host,user,password,db_name)
-    return db
-
 # Stores a prices with the exchange and currency pair information
 # exchange  and cur_pair must be a valid string from the database
 def savePriceBD(exchange, cur_pair, price, db):
@@ -83,7 +79,7 @@ def savePriceBD(exchange, cur_pair, price, db):
     db.commit()
 
 
-def sendErrorEmail(destemail,msg):
+def sendEmail(destemail, msg):
     try:
         gmail_user = 'felipedevcrypto@gmail.com'
         gmail_password = 'didu.2015'
@@ -127,10 +123,8 @@ def startDownload(host,resource,exchange,cur_pair,pause,db,extractor,destemail):
         except Exception as err:
             print(threading.current_thread().name, 'Error', host+resource )
             logging.exception(err)
-            sendErrorEmail(destemail,host+resource)
+            sendEmail(destemail, host + resource)
         time.sleep(pause)
-
-
 
 # runs  'startDownload()'  for multiple currency pairs
 # it ask for the database connection and the number of resources you want to download
@@ -144,7 +138,7 @@ def startMultiDownload():
     nums_requests = int(input())
     ths = []
     for i in range(nums_requests):
-        db = createDBConnection(*db_params)
+        db = pymysql.connect(*db_params)
         print('Type params for resource number ' + str(i+1) + ' : host resource exchange currencyPair pause: ')
         req = input().split()
         req[4] = int(req[4])

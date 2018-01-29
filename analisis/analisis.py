@@ -133,9 +133,6 @@ def simg(pcs, cna, fee, aph, tm, ptg):
     plt.plot(ems)
     plt.show()
 
-# mutation table, Prices coins fees, gen valid ranges
-mtt,pcf,gvr = None,None,None
-
 # load prices from database from date d0
 # to d1, dates are given in secons from epoch
 def loadPrices(d0,d1):
@@ -156,68 +153,47 @@ def loadPrices(d0,d1):
     prices = [ e[0] for e in lines ]
     return prices;
 
-# Initializes gloabal variables
-#
-def init():
-    global mtt,pcf,gvr
-    mtt = []
-    difs = [ (i+1)/100 for i in range(10) ]
-    difs = difs + [ -v for v in difs ]
-    idifs = [ i+1 for i in range(10) ] + [15,20,30]
-    idifs = idifs + [ -v for v in idifs ]
-    mtt.append(difs)
-    mtt.append(idifs)
-    mtt.append(difs)
-
-    ini = 1515823228
-    ini = 1515391551
-    fin = 1515909634
-    pcs = loadPrices(ini,fin)
-    pcf = [pcs,100,0.001]
-
-    gvr = []
-    gvr.append( (0,1) )
-    gvr.append( (5,400) )
-    gvr.append( (0,0.20) )
-
-    random.seed(time.time())
-
 # Generates a new random gen
 #
-def randgen():
+def randgen(evm):
     gen = []
-    gen.append( random.uniform(gvr[0][0],gvr[0][1]) )
-    gen.append( random.randrange(gvr[1][0],gvr[1][1]) )
-    gen.append( random.uniform(gvr[2][0],gvr[2][1]) )
-    gen[0] = round(gen[0],3)
-    gen[2] = round(gen[2],3)
+    lms = evm['lms']
+    gen.append( random.uniform(lms[0][0],lms[0][1]) )
+    gen.append( random.randrange(lms[1][0],lms[1][1]) )
+    gen.append( random.uniform(lms[2][0],lms[2][1]) )
+    rds = evm['rds']
+    for i in range(len(rds)):
+        gen[i] = round(gen[i],rds[i])
     gen = tuple(gen)
     return gen
 
-# Returns boolean whether the gen value at
-# position i is valid
-def valgen(gen,i):
-    vld = gvr[i]
-    return gen[i]>=vld[0] and gen[i]<=vld[1]
+def born(evm):
+    gen = randgen(evm)
+    gn = fitness(gen,evm)
+    while gn<=0:
+        gen = randgen(evm)
+        gn = fitness(gen,evm)
+    return (-gn,tuple(gen))
 
 # Given a gen, calculates the percentage gain
 # during a buy an sell simulation
-def fitness(gen):
+def fitness(gen,evm):
+    pcf = evm['pcf']
     pms = pcf + list(gen)
-    return round(sim(*pms),7)
+    return round(sim(*pms),evm['frd'])
 
 # calculates adjacent spicimens to spc
 # modifing the i property of spc wit val
-def getadj(spc, i, val):
+def getadj(spc, i, val,evm):
     nspc = None
     gn, gen = -spc[0],spc[1]
     ngen = list(gen)
-    ngen[i] = gen[i]+val
-    ngen[i] = round(ngen[i],3)
-    if valgen(ngen,i):
-        ngn = fitness(ngen)
+    ngen[i] = round(ngen[i]+val,evm['rds'][i])
+    lms = evm['lms']
+    if ngen[i]>=lms[i][0] and ngen[i]<=lms[i][1]:
+        ngn = fitness(ngen,evm)
         if ngn>gn:
-            nspc = ( -ngn, tuple(ngen))
+            nspc = (-ngn, tuple(ngen))
     return nspc
 
 # Given a specimen u, generates all
@@ -227,54 +203,94 @@ def getadj(spc, i, val):
 # specimen to process
 # psm stores perfect specimens which cannot be
 # improved more
-def dfs(u,vis,st,psm):
+def dfs(u,vis,st,psm,evm):
     kds = 0
-    for i in range(len(u)):
-        tbl = mtt[i]
+    for i in range(len(u[1])):
+        tbl = evm['mtt'][i]
         for val in tbl:
-            v = getadj(u, i, val)
+            #print(i,val)
+            v = getadj(u, i, val,evm)
             if v!=None  and v[1] not in vis:
                 hp.heappush(st,v)
-                vis.add(u[1])
+                vis.add(v[1])
                 kds += 1
     if kds==0:
         psm.add(u)
-        print('Perfect specimen:',u,len(psm))
+        print('Perfect specimen:',u)
 
-# first searches for a random gen
-# with performace greater than zero
-# then using dfs the gen perfonace is
-def search():
-    gen = randgen()
-    gn = fitness(gen)
-    print('Random searching ...')
-    while gn<=0:
-        gen = randgen()
-        gn = fitness(gen)
-    spc = (-gn,gen)
-    st,psm = [],set()
-    vis = set()
-    hp.heappush(st,spc)
+def mute(spc,evm):
+    st, psm, vis, rps = [], set(), set(), 500
+    hp.heappush(st, spc)
     vis.add(spc[1])
-    while len(st)>0 and len(psm)<4:
+    while len(st)>0 and len(psm)<50 and rps>0:
         u = hp.heappop(st)
-        dfs(u,vis,st,psm)
-    print(vis)
+        dfs(u, vis, st, psm, evm)
+        rps -= 1
     return psm
 
-def test():
-    init()
-    psm = search()
-    spc = min(psm)
-    print('\nBest spc:',spc)
-    pms = pcf + list(spc[1])
-    simg(*pms)
+def repr(s1,s2):
+    ngen = []
+    for i in range(len(s1[1])):
+        j = random.randint(2)
+        if j==0:
+            ngen.append(s1[1][i])
+        else:
+            ngen.append(s2[1][i])
+    ngn = fitness(ngen)
+    return (-ngn,tuple(ngen))
+
+
+
+
 
 def test2():
     # show prices in the databases
     pcs = loadPrices(1514770796,1515912230)
     pcs = loadPrices(1515391551, 1515912230)
+    ema = calcEMA(pcs,0.01)
     plt.plot(pcs)
+    plt.plot(ema)
     plt.show()
 
-test()
+def test3():
+    mtt = []
+    difs = [(i + 1) / 100 for i in range(10)] + [ (i+1)/1000 for i in range(5)]
+    difs = difs + [-v for v in difs]
+    idifs = [i + 1 for i in range(10)] + [15, 20, 30]
+    idifs = idifs + [-v for v in idifs]
+    mtt.append(difs)
+    mtt.append(idifs)
+    mtt.append(difs)
+
+    ini = 1515391551
+    fin = 1515909634
+    pcs = loadPrices(ini, fin)
+    pcf = [pcs, 100, 0.001]
+
+    lms = []
+    lms.append((0, 1))
+    lms.append((5, 400))
+    lms.append((0, 0.50))
+
+    rds = [3,3,3]
+
+
+    evm = {}
+    evm['mtt'] = mtt
+    evm['pcf'] = pcf
+    evm['lms'] = lms
+    evm['rds'] = rds
+    evm['frd'] = 7
+
+    spc = born(evm)
+    print('first specimen:',spc)
+    bspc = mute(spc,evm)
+    for sp in bspc:
+        print(sp)
+
+
+
+
+test3()
+
+
