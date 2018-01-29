@@ -68,7 +68,6 @@ def calcEMA(vals,a):
 # tm: time in minutes to calculate Ratio
 # ptg: percentage to buy or sel
 def sim(pcs, cna, fee, aph, tm, ptg):
-    #print('sim tm:',tm)
     lbuy, lsell = ptg,-ptg
     ema, dev = EMA(aph), Ratio([pcs[0]] * tm)
     ocna, cnb, fees = cna, 0, 0
@@ -204,17 +203,16 @@ def getadj(spc, i, val,evm):
 # psm stores perfect specimens which cannot be
 # improved more
 def dfs(u,vis,st,psm,evm):
-    kds = 0
+    kds = False
     for i in range(len(u[1])):
         tbl = evm['mtt'][i]
         for val in tbl:
-            #print(i,val)
             v = getadj(u, i, val,evm)
             if v!=None  and v[1] not in vis:
                 hp.heappush(st,v)
                 vis.add(v[1])
-                kds += 1
-    if kds==0:
+                kds = True
+    if kds:
         psm.add(u)
         print('Perfect specimen:',u)
 
