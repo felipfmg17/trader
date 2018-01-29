@@ -135,7 +135,7 @@ def simg(pcs, cna, fee, aph, tm, ptg):
 # load prices from database from date d0
 # to d1, dates are given in secons from epoch
 def loadPrices(d0,d1):
-    db = pymysql.connect('localhost','root','root','crypto_prices')
+    db = pymysql.connect('localhost','root','didu.2015','crypto_prices')
     sql = """ SELECT  a.price as Price
     FROM coin_price as a
     JOIN currency_pair as b
@@ -252,25 +252,29 @@ def test2():
 
 def test3():
     mtt = []
-    difs = [(i + 1) / 100 for i in range(10)] + [ (i+1)/1000 for i in range(5)]
+    #difs = [(i + 1) / 100 for i in range(10)] + [ (i+1)/1000 for i in range(5)]
+    difs =  [ (i+1)/1000 for i in range(10)] + [ (i+1)/10000 for i in range(5)] + [ 0.01, 0.02]
     difs = difs + [-v for v in difs]
-    idifs = [i + 1 for i in range(10)] + [15, 20, 30]
-    idifs = idifs + [-v for v in idifs]
     mtt.append(difs)
+    idifs = [i + 1 for i in range(10)] 
+    #idifs = [i + 1 for i in range(10)] + [15, 20, 30]
+    idifs = idifs + [-v for v in idifs]
     mtt.append(idifs)
+    difs = [0.01,0.02] + [ (i+1)/1000 for i in range(10)]
+    difs = difs + [-v for v in difs]
     mtt.append(difs)
 
     ini = 1515391551
     fin = 1515909634
     pcs = loadPrices(ini, fin)
-    pcf = [pcs, 100, 0.001]
+    pcf = [pcs, 100, 0.01]
 
     lms = []
-    lms.append((0, 1))
-    lms.append((5, 400))
-    lms.append((0, 0.50))
+    lms.append((0, 0.05))
+    lms.append((30, 150))
+    lms.append((0, 0.05))
 
-    rds = [3,3,3]
+    rds = [4,4,4]
 
 
     evm = {}
@@ -278,14 +282,19 @@ def test3():
     evm['pcf'] = pcf
     evm['lms'] = lms
     evm['rds'] = rds
-    evm['frd'] = 7
+    evm['frd'] = 8
 
     spc = born(evm)
     print('first specimen:',spc)
     bspc = mute(spc,evm)
-    for sp in bspc:
-        print(sp)
-
+    #for sp in bspc:
+     #   print(list(sp).sorted())
+    gen = min(bspc)[1]
+    # simulating with prices from jan 1 to jan 14
+    prm = [loadPrices(1514786763,1515912230),100,0.001] + list(gen)
+    print('\nSimulating\n')
+    print(min(bspc))
+    simg(*prm)
 
 
 
