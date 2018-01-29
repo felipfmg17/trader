@@ -106,14 +106,14 @@ def simg(pcs, cna, fee, aph, tm, ptg):
             cnb += cna / p
             cna = 0
             buys += 1
-            print('Buy:',i)
+            print('Buy:',i,p)
         elif d<lsell and cnb>0 :
             cna = cnb * p
             cnb = 0
             fees += cna * fee
             cna -= cna * fee
             sells += 1
-            print('Sell:',i)
+            print('Sell:',i,p)
     if cnb>0:
         cna = cnb * pcs[-1]
         fees += cna * fee
@@ -163,7 +163,7 @@ def init():
     mtt = []
     difs = [ (i+1)/100 for i in range(10) ]
     difs = difs + [ -v for v in difs ]
-    idifs = [ i+1 for i in range(10) ] + [15,20,25]
+    idifs = [ i+1 for i in range(10) ] + [15,20,30]
     idifs = idifs + [ -v for v in idifs ]
     mtt.append(difs)
     mtt.append(idifs)
@@ -177,8 +177,8 @@ def init():
 
     gvr = []
     gvr.append( (0,1) )
-    gvr.append( (10,200) )
-    gvr.append( (0,1) )
+    gvr.append( (5,400) )
+    gvr.append( (0,0.20) )
 
     random.seed(time.time())
 
@@ -189,6 +189,8 @@ def randgen():
     gen.append( random.uniform(gvr[0][0],gvr[0][1]) )
     gen.append( random.randrange(gvr[1][0],gvr[1][1]) )
     gen.append( random.uniform(gvr[2][0],gvr[2][1]) )
+    gen[0] = round(gen[0],3)
+    gen[2] = round(gen[2],3)
     gen = tuple(gen)
     return gen
 
@@ -202,7 +204,7 @@ def valgen(gen,i):
 # during a buy an sell simulation
 def fitness(gen):
     pms = pcf + list(gen)
-    return sim(*pms)
+    return round(sim(*pms),7)
 
 # calculates adjacent spicimens to spc
 # modifing the i property of spc wit val
@@ -211,6 +213,7 @@ def getadj(spc, i, val):
     gn, gen = -spc[0],spc[1]
     ngen = list(gen)
     ngen[i] = gen[i]+val
+    ngen[i] = round(ngen[i],3)
     if valgen(ngen,i):
         ngn = fitness(ngen)
         if ngn>gn:
@@ -222,7 +225,7 @@ def getadj(spc, i, val):
 # vis is used to store visited specimes
 # st is a priority queue for the next
 # specimen to process
-# psm stores perfect specimens with cannot be
+# psm stores perfect specimens which cannot be
 # improved more
 def dfs(u,vis,st,psm):
     kds = 0
@@ -230,13 +233,13 @@ def dfs(u,vis,st,psm):
         tbl = mtt[i]
         for val in tbl:
             v = getadj(u, i, val)
-            if v!=None  and v not in vis:
+            if v!=None  and v[1] not in vis:
                 hp.heappush(st,v)
-                vis.add(u)
+                vis.add(u[1])
                 kds += 1
     if kds==0:
-        psm.append(u)
-        print('Perfect specimen:',u,len(st))
+        psm.add(u)
+        print('Perfect specimen:',u,len(psm))
 
 # first searches for a random gen
 # with performace greater than zero
@@ -249,19 +252,21 @@ def search():
         gen = randgen()
         gn = fitness(gen)
     spc = (-gn,gen)
-    st,psm = [],[]
+    st,psm = [],set()
     vis = set()
     hp.heappush(st,spc)
-    vis.add(spc)
-    while len(st)>0:
+    vis.add(spc[1])
+    while len(st)>0 and len(psm)<4:
         u = hp.heappop(st)
         dfs(u,vis,st,psm)
+    print(vis)
     return psm
 
 def test():
     init()
     psm = search()
     spc = min(psm)
+    print('\nBest spc:',spc)
     pms = pcf + list(spc[1])
     simg(*pms)
 
