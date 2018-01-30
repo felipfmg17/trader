@@ -152,6 +152,26 @@ def loadPrices(d0,d1):
     prices = [ e[0] for e in lines ]
     return prices;
 
+
+def pricesmanager():
+    d0,d1 = 1514770796,1515912230
+    pcs = loadPrices(d0,d1)
+    minu = 1
+    hour = minu*60
+    hour8 = hour*8
+    day = hour*24
+    day3 = day*3
+    week = day*7
+
+    pm = {}
+    pm['hour'] = pcs[:hour]
+    pm['hour8'] = pcs[:hour8]
+    pm['day'] = pcs[:day]
+    pm['day3'] = pcs[:day3]
+    pm['week'] = pcs[:week]
+
+    return pm
+
 # Generates a new random gen
 #
 def randgen(evm):
@@ -261,7 +281,7 @@ def test3():
     mtt = []
 
     #difs = [(i + 1) / 100 for i in range(10)] + [ (i+1)/1000 for i in range(5)]
-    difs =  [ (i+1)/1000 for i in range(10)] + [0.02, 0.03]
+    difs =  [ (i+1)/1000 for i in range(5)]
     difs = difs + [-v for v in difs]
     mtt.append(difs)
 
@@ -270,21 +290,18 @@ def test3():
     idifs = idifs + [-v for v in idifs]
     mtt.append(idifs)
 
-    difs =  [ (i+1)/1000 for i in range(10)] + [0.02, 0.03]
+    difs =  [ (i+1)/1000 for i in range(10)] 
     difs = difs + [-v for v in difs] 
     mtt.append(difs)
 
-    ini = 1515391551
-    fin = 1515912230
-    # 8 hours prices
-    ini, fin = 1515886020 , 1515912230
-    pcs = loadPrices(ini, fin)
+    pm = pricesmanager()
+    pcs = pm['day']
     pcf = [pcs, 100, 0.001]
 
     lms = []
-    lms.append((0, 0.1))
-    lms.append((1, 15))
     lms.append((0, 0.02))
+    lms.append((1, 200))
+    lms.append((0, 0.05))
 
     rds = [5,5,5]
 
@@ -301,11 +318,12 @@ def test3():
     bspc = mute(spc,evm)
     #for sp in bspc:
      #   print(list(sp).sorted())
-    gen = min(bspc)[1]
+    gen = list(min(bspc)[1])
+    gen[0] = 0.005
     # simulating with prices from jan 1 to jan 14
     #prm = [loadPrices(1514786763,1515912230),100,0.001] + list(gen)
     # simulating with 8 hours prices
-    prm = [loadPrices(1515886020,1515912230),100,0.001] + list(gen)
+    prm = [ pm['day'],100,0.001] + gen
     print('\nSimulating\n')
     print(min(bspc))
     simg(*prm)
