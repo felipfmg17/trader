@@ -169,9 +169,9 @@ def randgen(evm):
 def born(evm):
     gen = randgen(evm)
     gn = fitness(gen,evm)
-    while gn<=0:
-        gen = randgen(evm)
-        gn = fitness(gen,evm)
+    #while gn<=0:
+     #   gen = randgen(evm)
+    #    gn = fitness(gen,evm)
     return (-gn,tuple(gen))
 
 # Given a gen, calculates the percentage gain
@@ -212,15 +212,15 @@ def dfs(u,vis,st,psm,evm):
                 hp.heappush(st,v)
                 vis.add(v[1])
                 kds = True
-    if kds:
+    if kds==False:
         psm.add(u)
         print('Perfect specimen:',u)
 
 def mute(spc,evm):
-    st, psm, vis, rps = [], set(), set(), 500
+    st, psm, vis, rps = [], set(), set(), 200
     hp.heappush(st, spc)
     vis.add(spc[1])
-    while len(st)>0 and len(psm)<50 and rps>0:
+    while len(st)>0 and len(psm)<20 and rps>0:
         u = hp.heappop(st)
         dfs(u, vis, st, psm, evm)
         rps -= 1
@@ -243,38 +243,50 @@ def repr(s1,s2):
 
 def test2():
     # show prices in the databases
-    pcs = loadPrices(1514770796,1515912230)
-    pcs = loadPrices(1515391551, 1515912230)
-    ema = calcEMA(pcs,0.01)
-    plt.plot(pcs)
-    plt.plot(ema)
-    plt.show()
+    #pcs = loadPrices(1514770796,1515912230)
+    pcs = loadPrices(1515886020, 1515912230)
+    gen = (0.0477, 6, 0.002)
+    pcf = [pcs, 100, 0.001]
+    pms =  pcf + list(gen)
+    simg(*pms)
+
+
+
+    # ema = calcEMA(pcs,0.0477)
+    # plt.plot(pcs)
+    # plt.plot(ema)
+    # plt.show()
 
 def test3():
     mtt = []
+
     #difs = [(i + 1) / 100 for i in range(10)] + [ (i+1)/1000 for i in range(5)]
-    difs =  [ (i+1)/1000 for i in range(10)] + [ (i+1)/10000 for i in range(5)] + [ 0.01, 0.02]
+    difs =  [ (i+1)/1000 for i in range(10)] + [0.02, 0.03]
     difs = difs + [-v for v in difs]
     mtt.append(difs)
+
     idifs = [i + 1 for i in range(10)] 
     #idifs = [i + 1 for i in range(10)] + [15, 20, 30]
     idifs = idifs + [-v for v in idifs]
     mtt.append(idifs)
-    difs = [0.01,0.02] + [ (i+1)/1000 for i in range(10)]
-    difs = difs + [-v for v in difs]
+
+    difs =  [ (i+1)/1000 for i in range(10)] + [0.02, 0.03]
+    difs = difs + [-v for v in difs] 
     mtt.append(difs)
 
     ini = 1515391551
-    fin = 1515909634
+    fin = 1515912230
+    # 8 hours prices
+    ini, fin = 1515886020 , 1515912230
     pcs = loadPrices(ini, fin)
-    pcf = [pcs, 100, 0.01]
+    pcf = [pcs, 100, 0.001]
 
     lms = []
-    lms.append((0, 0.05))
-    lms.append((30, 150))
-    lms.append((0, 0.05))
+    lms.append((0, 0.1))
+    lms.append((1, 15))
+    lms.append((0, 0.02))
 
-    rds = [4,4,4]
+    rds = [5,5,5]
 
 
     evm = {}
@@ -291,7 +303,9 @@ def test3():
      #   print(list(sp).sorted())
     gen = min(bspc)[1]
     # simulating with prices from jan 1 to jan 14
-    prm = [loadPrices(1514786763,1515912230),100,0.001] + list(gen)
+    #prm = [loadPrices(1514786763,1515912230),100,0.001] + list(gen)
+    # simulating with 8 hours prices
+    prm = [loadPrices(1515886020,1515912230),100,0.001] + list(gen)
     print('\nSimulating\n')
     print(min(bspc))
     simg(*prm)
