@@ -91,6 +91,7 @@ def sim(pcs, cna, fee, aph, tm, ptg):
     return gain
 
 def simg(pcs, cna, fee, aph, tm, ptg):
+    print('\nSIMULATING:')
     lbuy, lsell = ptg,-ptg
     ema, dev, ems = EMA(aph), Ratio([pcs[0]] * tm), []
     ocna, cnb, sells, buys, fees = cna, 0, 0, 0, 0
@@ -118,9 +119,11 @@ def simg(pcs, cna, fee, aph, tm, ptg):
         fees += cna * fee
         cna -= cna * fee
         sells += 1
+        print('Sell:',i,p)
     gain = (cna - ocna) / ocna
 
-
+    print('\n')
+    print('alpha:',aph,'tm:',tm,'ptg:',ptg)
     print('Original coins A:',ocna)
     print('Final coins A: ',round(cna,2))
     print('Difference:',round(cna-ocna,2))
@@ -281,7 +284,7 @@ def test3():
     mtt = []
 
     #difs = [(i + 1) / 100 for i in range(10)] + [ (i+1)/1000 for i in range(5)]
-    difs =  [ (i+1)/1000 for i in range(5)]
+    difs =  [ (i+1)/100 for i in range(10)]
     difs = difs + [-v for v in difs]
     mtt.append(difs)
 
@@ -299,9 +302,9 @@ def test3():
     pcf = [pcs, 100, 0.001]
 
     lms = []
-    lms.append((0, 0.02))
-    lms.append((1, 200))
-    lms.append((0, 0.05))
+    lms.append((0.2, 0.5))
+    lms.append((1, 20))
+    lms.append((0, 0.015))
 
     rds = [5,5,5]
 
@@ -319,15 +322,18 @@ def test3():
     #for sp in bspc:
      #   print(list(sp).sorted())
     gen = list(min(bspc)[1])
-    gen[0] = 0.005
+    #gen[0] = 0.005
     # simulating with prices from jan 1 to jan 14
     #prm = [loadPrices(1514786763,1515912230),100,0.001] + list(gen)
     # simulating with 8 hours prices
-    prm = [ pm['day'],100,0.001] + gen
-    print('\nSimulating\n')
-    print(min(bspc))
+    prm = [ pm['day3'],100,0.001] + gen
+    
+    #print(min(bspc))
     simg(*prm)
 
+    prm = [ pm['week'],100,0.001] + gen
+
+    simg(*prm)
 
 
 test3()
