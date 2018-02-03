@@ -4,6 +4,8 @@ import random
 import pymysql
 import time
 import heapq as hp
+import bintrees
+from bintrees import RBTree
 
 class EMA:
 	def __init__(self,a):
@@ -41,6 +43,41 @@ class Ratio:
 		vals[ind] = v
 		self.ind = (ind+1)%n
 		return s
+
+
+class Ratiof:
+    def __init__(self,vals):
+        self.n = len(vals)
+        self.vals = vals[:]
+        self.ind = 0
+        tr = RBTree()
+        for i in n:
+            if not vals[i] in tr:
+                tr[vals[i]] = set()
+            tr[vals[i]].add(i)
+        self.tr = tr
+
+    def next(self,v):
+        vals,n,ind,tr = self.vals,self.n,self.ind,self.tr
+        mn = tr.min_item()
+        mx = tr.max_item()
+        ar = list(mn)+list(mx)
+        for i in range(len(ar)):
+            ar[i] =  (ar[i]-ind+n)%n
+        u = (max(ar)+ind)%n
+        s = (v-vals[u])/vals[u]
+        mp = tr[vals[ind]]
+        mp.remove(ind)
+        if len(mp)==0:
+            del tr[vals[ind]]
+        if not v in tr:
+            tr[v] = set()
+        tr[v].add[ind]
+        vals[ind] = v
+
+
+
+
 
 def calcSMA(vals,n):
 	series = []
