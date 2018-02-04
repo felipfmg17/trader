@@ -44,14 +44,13 @@ class Ratio:
 		self.ind = (ind+1)%n
 		return s
 
-
 class Ratiof:
     def __init__(self,vals):
         self.n = len(vals)
         self.vals = vals[:]
         self.ind = 0
         tr = RBTree()
-        for i in n:
+        for i in range(self.n):
             if not vals[i] in tr:
                 tr[vals[i]] = set()
             tr[vals[i]].add(i)
@@ -61,19 +60,24 @@ class Ratiof:
         vals,n,ind,tr = self.vals,self.n,self.ind,self.tr
         mn = tr.min_item()
         mx = tr.max_item()
-        ar = list(mn)+list(mx)
+        ar = list(mn[1])+list(mx[1])
+        #print(mn,mx,ar)
         for i in range(len(ar)):
             ar[i] =  (ar[i]-ind+n)%n
         u = (max(ar)+ind)%n
         s = (v-vals[u])/vals[u]
         mp = tr[vals[ind]]
+        #print(u,mp)
         mp.remove(ind)
         if len(mp)==0:
             del tr[vals[ind]]
         if not v in tr:
             tr[v] = set()
-        tr[v].add[ind]
+        #print(tr[v],v)
+        tr[v].add(ind)
         vals[ind] = v
+        self.ind = (ind+1)%n
+        return s
 
 
 
@@ -106,7 +110,7 @@ def calcEMA(vals,a):
 # ptg: percentage to buy or sel
 def sim(pcs, cna, fee, aph, tm, ptg):
     lbuy, lsell = ptg,-ptg
-    ema, dev = EMA(aph), Ratio([pcs[0]] * tm)
+    ema, dev = EMA(aph), Ratiof([pcs[0]] * tm)
     ocna, cnb, fees = cna, 0, 0
     for p in pcs:
         d = dev.next( ema.next(p) )
@@ -130,7 +134,7 @@ def sim(pcs, cna, fee, aph, tm, ptg):
 def simg(pcs, cna, fee, aph, tm, ptg):
     print('\nSIMULATING:')
     lbuy, lsell = ptg,-ptg
-    ema, dev, ems = EMA(aph), Ratio([pcs[0]] * tm), []
+    ema, dev, ems = EMA(aph), Ratiof([pcs[0]] * tm), []
     ocna, cnb, sells, buys, fees = cna, 0, 0, 0, 0
     for i in range(len(pcs)):
         p = pcs[i]
@@ -175,7 +179,7 @@ def simg(pcs, cna, fee, aph, tm, ptg):
 # load prices from database from date d0
 # to d1, dates are given in secons from epoch
 def loadPrices(d0,d1):
-    db = pymysql.connect('localhost','root','didu.2015','crypto_prices')
+    db = pymysql.connect('localhost','root','root','crypto_prices')
     sql = """ SELECT  a.price as Price
     FROM coin_price as a
     JOIN currency_pair as b
@@ -209,6 +213,7 @@ def pricesmanager():
     pm['day'] = pcs[:day]
     pm['day3'] = pcs[:day3]
     pm['week'] = pcs[:week]
+    pm['full'] = pcs[:]
 
     return pm
 
@@ -276,11 +281,12 @@ def dfs(u,vis,st,psm,evm):
         psm.add(u)
         print('Perfect specimen:',u)
 
+# psm: perfect specimens
 def mute(spc,evm):
-    st, psm, vis, rps = [], set(), set(), 200
+    st, psm, vis, rps = [], set(), set(), 150
     hp.heappush(st, spc)
     vis.add(spc[1])
-    while len(st)>0 and len(psm)<20 and rps>0:
+    while len(st)>0 and len(psm)<7 and rps>0:
         u = hp.heappop(st)
         dfs(u, vis, st, psm, evm)
         rps -= 1
@@ -302,10 +308,10 @@ def repr(s1,s2):
 
 
 def test2():
-    # show prices in the databases
-    #pcs = loadPrices(1514770796,1515912230)
-    pcs = loadPrices(1515886020, 1515912230)
-    gen = (0.0477, 6, 0.002)
+
+    pm = pricesmanager()
+    pcs = pm['full']
+    gen = (0.0972, 100, 0.03092)
     pcf = [pcs, 100, 0.001]
     pms =  pcf + list(gen)
     simg(*pms)
@@ -338,32 +344,41 @@ def test3():
     pcs = pm['day']
     pcf = [pcs, 100, 0.001]
 
+    # limits
     lms = []
-    lms.append((0.2, 0.5))
-    lms.append((1, 20))
-    lms.append((0, 0.015))
+    lms.append((0.08, 0.2))  # alpha for EMA smoothing
+    lms.append((20, 200))     # minutes
+    lms.append((0.015, 0.15))   # percentage
 
+    # rounding values
     rds = [5,5,5]
 
 
     evm = {}
-    evm['mtt'] = mtt
-    evm['pcf'] = pcf
-    evm['lms'] = lms
-    evm['rds'] = rds
-    evm['frd'] = 8
+    evm['mtt'] = mtt  # mutation table
+    evm['pcf'] = pcf  # prices, coins, fees
+    evm['lms'] = lms  # limits
+    evm['rds'] = rds  #rounding values
+    evm['frd'] = 8  # rounding for fitness
 
-    spc = born(evm)
-    print('first specimen:',spc)
-    bspc = mute(spc,evm)
-    #for sp in bspc:
-     #   print(list(sp).sorted())
-    gen = list(min(bspc)[1])
-    #gen[0] = 0.005
-    # simulating with prices from jan 1 to jan 14
-    #prm = [loadPrices(1514786763,1515912230),100,0.001] + list(gen)
-    # simulating with 8 hours prices
-    prm = [ pm['day3'],100,0.001] + gen
+    gn = 0
+
+    while gn<=0:
+
+        spc = born(evm)
+        print('first specimen:',spc)
+        bspc = mute(spc,evm)
+        #for sp in bspc:
+         #   print(list(sp).sorted())
+        gen = list(min(bspc)[1])
+        #gen[0] = 0.005
+        # simulating with prices from jan 1 to jan 14
+        #prm = [loadPrices(1514786763,1515912230),100,0.001] + list(gen)
+        # simulating with 8 hours prices
+        prm = [ pm['day3'],100,0.001] + gen
+
+        gn = sim(*prm)
+
     
     #print(min(bspc))
     simg(*prm)
