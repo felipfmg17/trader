@@ -58,29 +58,42 @@ class Ratiof:
 
     def next(self,v):
         vals,n,ind,tr = self.vals,self.n,self.ind,self.tr
-        mn = tr.min_item()
-        mx = tr.max_item()
-        ar = list(mn[1])+list(mx[1])
-        #print(mn,mx,ar)
+        mn,mx = tr.min_item(), tr.max_item()
+        ar = []
+        if mn[0]<=v:
+            ar.extend(list(mn[1]))
+        if mx[0]>v:
+            ar.extend(list(mx[1]))
         for i in range(len(ar)):
             ar[i] =  (ar[i]-ind+n)%n
         u = (max(ar)+ind)%n
         s = (v-vals[u])/vals[u]
         mp = tr[vals[ind]]
-        #print(u,mp)
         mp.remove(ind)
         if len(mp)==0:
             del tr[vals[ind]]
         if not v in tr:
             tr[v] = set()
-        #print(tr[v],v)
         tr[v].add(ind)
         vals[ind] = v
         self.ind = (ind+1)%n
         return s
 
+class Priceman:
+    def __init__(self,d0,d1):
+        self.pcs = loadPrices(d0,d1)
+        pm = {}
+        pm['zero'] = 0
+        pm['hour'] = 60
+        pm['hour8'] = pm['hour']*8
+        pm['day'] = pm['hour']*24
+        pm['day3'] = pm['day']*3
+        pm['day5'] = pm['day']*5
+        pm['week'] = pm['day']*7
+        self.pm = pm
 
-
+    def get(self,ini,s):
+        return self.pcs[self.pm[ini]:self.pm[ini]+self.pm[s]]
 
 
 def calcSMA(vals,n):
@@ -131,6 +144,9 @@ def sim(pcs, cna, fee, aph, tm, ptg):
     gain = (cna - ocna) / ocna
     return gain
 
+# Simulates and prints prices every time a
+# buy or sell is made
+# at the end prices are plotted
 def simg(pcs, cna, fee, aph, tm, ptg):
     print('\nSIMULATING:')
     lbuy, lsell = ptg,-ptg
@@ -286,7 +302,7 @@ def mute(spc,evm):
     st, psm, vis, rps = [], set(), set(), 150
     hp.heappush(st, spc)
     vis.add(spc[1])
-    while len(st)>0 and len(psm)<7 and rps>0:
+    while len(st)>0 and len(psm)<6 and rps>0:
         u = hp.heappop(st)
         dfs(u, vis, st, psm, evm)
         rps -= 1
@@ -304,17 +320,25 @@ def repr(s1,s2):
     return (-ngn,tuple(ngen))
 
 
-
+def plot(pcs,aph):
+    ema = calcEMA(pcs,aph)
+    plt.plot(pcs)
+    plt.plot(ema)
+    plt.show()
 
 
 def test2():
-
-    pm = pricesmanager()
-    pcs = pm['full']
-    gen = (0.0972, 100, 0.03092)
-    pcf = [pcs, 100, 0.001]
-    pms =  pcf + list(gen)
-    simg(*pms)
+    d0, d1 = 1514770796, 1515912230
+    pm = Priceman(d0,d1)
+    pcs = pm.get('zero','week')
+    #pcs = pricesmanager()['week']
+    pcf = [pcs,100,0.001]
+    gen = (0.10853, 210, 0.04725)
+    gen = list(gen)
+    prm = pcf + gen
+    gn = sim(*prm)
+    print(gn)
+    gn = simg(*prm)
 
 
 
@@ -324,35 +348,38 @@ def test2():
     # plt.show()
 
 def test3():
-    mtt = []
 
-    #difs = [(i + 1) / 100 for i in range(10)] + [ (i+1)/1000 for i in range(5)]
-    difs =  [ (i+1)/100 for i in range(10)]
+    random.seed(time.time())
+
+    mtt = []
+    difs =  [ (i+1)/1000 for i in range(10)]
     difs = difs + [-v for v in difs]
     mtt.append(difs)
 
-    idifs = [i + 1 for i in range(10)] 
-    #idifs = [i + 1 for i in range(10)] + [15, 20, 30]
+    idifs = [ (i+1) for i in range(10)]
     idifs = idifs + [-v for v in idifs]
     mtt.append(idifs)
 
-    difs =  [ (i+1)/1000 for i in range(10)] 
+    difs =  [ (i+1)/1000 for i in range(10)]
     difs = difs + [-v for v in difs] 
     mtt.append(difs)
 
-    pm = pricesmanager()
-    pcs = pm['day']
+    d0, d1 = 1514770796, 1515912230
+    pm = Priceman(d0,d1)
+
+    pcs = pm.get('zero','day')
     pcf = [pcs, 100, 0.001]
+
+    #plot(pcs,0.1)
 
     # limits
     lms = []
-    lms.append((0.08, 0.2))  # alpha for EMA smoothing
-    lms.append((20, 200))     # minutes
-    lms.append((0.015, 0.15))   # percentage
+    lms.append((0.05, 0.015))  # alpha for EMA smoothing
+    lms.append((100, 250))     # minutes
+    lms.append((0.04, 0.06))   # percentage
 
     # rounding values
     rds = [5,5,5]
-
 
     evm = {}
     evm['mtt'] = mtt  # mutation table
@@ -362,29 +389,16 @@ def test3():
     evm['frd'] = 8  # rounding for fitness
 
     gn = 0
-
     while gn<=0:
-
         spc = born(evm)
         print('first specimen:',spc)
         bspc = mute(spc,evm)
-        #for sp in bspc:
-         #   print(list(sp).sorted())
         gen = list(min(bspc)[1])
-        #gen[0] = 0.005
-        # simulating with prices from jan 1 to jan 14
-        #prm = [loadPrices(1514786763,1515912230),100,0.001] + list(gen)
-        # simulating with 8 hours prices
-        prm = [ pm['day3'],100,0.001] + gen
-
+        prm = [ pm.get('zero','week'),100,0.001] + gen
         gn = sim(*prm)
 
-    
-    #print(min(bspc))
-    simg(*prm)
 
-    prm = [ pm['week'],100,0.001] + gen
-
+    prm = [ pm.get('zero','week'),100,0.001] + gen
     simg(*prm)
 
 
