@@ -120,13 +120,10 @@ def startDownload(host,resource,exchange,cur_pair,pause,db,extractor,destemail):
             savePriceBD(exchange, cur_pair, price, db);
             print('Download successful ' + str(number) + ': ' ,host+resource)
             number += 1
-            if exchange=='bitso':
-                sendEmail(destemail, 'bitso working again')
         except Exception as err:
             print(threading.current_thread().name, 'Error', host+resource )
             logging.exception(err)
-            if not exchange=='bitso':
-                sendEmail(destemail, host + resource)
+            sendEmail(destemail, host + resource)
         time.sleep(pause)
 
 # runs  'startDownload()'  for multiple currency pairs
