@@ -44,6 +44,40 @@ class Ratio:
 		self.ind = (ind+1)%n
 		return s
 
+class Ratiog:
+    def __init__(self,vals):
+        self.n = len(vals)
+        self.vals = vals[:]
+        self.ind = 0
+
+    def next(self,v):
+        vals,n,ind = self.vals,self.n,self.ind
+        mx,mn = (vals[ind],ind),(vals[ind],ind)
+        for i in range(n):
+            j = (ind+i)%n
+            if vals[j]>=mx[0]:
+                mx = (vals[j],j)
+            if vals[j]<=mn[0]:
+                mn = (vals[j],j)
+        print('mini,max: ', mn,mx)
+        u = None
+        if mx[1]>mn[1]:
+            if mx[0]>v:
+                u = mx[0]
+            else:
+                u = mn[0]
+        elif mx[1]<=mn[1]:
+            if mn[0]<v:
+                u = mn[0]
+            else:
+                u = mx[0]
+
+        s = (v-u)/u
+        vals[ind] = v
+        self.ind = (ind+1)%n
+        return s
+
+
 class Ratiof:
     def __init__(self,vals):
         self.n = len(vals)
@@ -123,7 +157,7 @@ def calcEMA(vals,a):
 # ptg: percentage to buy or sel
 def sim(pcs, cna, fee, aph, tm, ptg):
     lbuy, lsell = ptg,-ptg
-    ema, dev = EMA(aph), Ratiof([pcs[0]] * tm)
+    ema, dev = EMA(aph), Ratiog([pcs[0]] * tm)
     ocna, cnb, fees = cna, 0, 0
     for p in pcs:
         d = dev.next( ema.next(p) )
@@ -150,7 +184,7 @@ def sim(pcs, cna, fee, aph, tm, ptg):
 def simg(pcs, cna, fee, aph, tm, ptg):
     print('\nSIMULATING:')
     lbuy, lsell = ptg,-ptg
-    ema, dev, ems = EMA(aph), Ratiof([pcs[0]] * tm), []
+    ema, dev, ems = EMA(aph), Ratiog([pcs[0]] * tm), []
     ocna, cnb, sells, buys, fees = cna, 0, 0, 0, 0
     for i in range(len(pcs)):
         p = pcs[i]
@@ -195,7 +229,7 @@ def simg(pcs, cna, fee, aph, tm, ptg):
 # load prices from database from date d0
 # to d1, dates are given in secons from epoch
 def loadPrices(d0,d1):
-    db = pymysql.connect('localhost','root','root','crypto_prices')
+    db = pymysql.connect('localhost','root','didu.2015','crypto_prices')
     sql = """ SELECT  a.price as Price
     FROM coin_price as a
     JOIN currency_pair as b
@@ -298,11 +332,12 @@ def dfs(u,vis,st,psm,evm):
         print('Perfect specimen:',u)
 
 # psm: perfect specimens
+# rps number of  repetitions fo the while
 def mute(spc,evm):
-    st, psm, vis, rps = [], set(), set(), 150
+    st, psm, vis, rps = [], set(), set(), 100
     hp.heappush(st, spc)
     vis.add(spc[1])
-    while len(st)>0 and len(psm)<6 and rps>0:
+    while len(st)>0 and len(psm)<5 and rps>0:
         u = hp.heappop(st)
         dfs(u, vis, st, psm, evm)
         rps -= 1
@@ -330,14 +365,12 @@ def plot(pcs,aph):
 def test2():
     d0, d1 = 1514770796, 1515912230
     pm = Priceman(d0,d1)
-    pcs = pm.get('zero','week')
+    pcs = pm.get('day5','day')
     #pcs = pricesmanager()['week']
     pcf = [pcs,100,0.001]
-    gen = (0.10853, 210, 0.04725)
+    gen = (0.90957, 230, 0.02362)
     gen = list(gen)
     prm = pcf + gen
-    gn = sim(*prm)
-    print(gn)
     gn = simg(*prm)
 
 
@@ -352,7 +385,7 @@ def test3():
     random.seed(time.time())
 
     mtt = []
-    difs =  [ (i+1)/1000 for i in range(10)]
+    difs =  [ ]
     difs = difs + [-v for v in difs]
     mtt.append(difs)
 
@@ -367,16 +400,16 @@ def test3():
     d0, d1 = 1514770796, 1515912230
     pm = Priceman(d0,d1)
 
-    pcs = pm.get('zero','day')
+    pcs = pm.get('day5','day')
     pcf = [pcs, 100, 0.001]
 
     #plot(pcs,0.1)
 
     # limits
     lms = []
-    lms.append((0.05, 0.015))  # alpha for EMA smoothing
-    lms.append((100, 250))     # minutes
-    lms.append((0.04, 0.06))   # percentage
+    lms.append((0.9, 1.0))  # alpha for EMA smoothing
+    lms.append((200, 600))     # minutes
+    lms.append((0.02, 0.25))   # percentage
 
     # rounding values
     rds = [5,5,5]
@@ -394,14 +427,15 @@ def test3():
         print('first specimen:',spc)
         bspc = mute(spc,evm)
         gen = list(min(bspc)[1])
-        prm = [ pm.get('zero','week'),100,0.001] + gen
+        prm = [ pm.get('day5','day'),100,0.001] + gen
         gn = sim(*prm)
+        break
 
 
-    prm = [ pm.get('zero','week'),100,0.001] + gen
+    prm = [ pm.get('day5','day'),100,0.001] + gen
     simg(*prm)
 
 
-test3()
+test2()
 
 
