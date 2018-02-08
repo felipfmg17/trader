@@ -52,29 +52,26 @@ class Ratiog:
 
     def next(self,v):
         vals,n,ind = self.vals,self.n,self.ind
-        mx,mn = (vals[ind],ind),(vals[ind],ind)
-        for i in range(n):
-            j = (ind+i)%n
-            if vals[j]>=mx[0]:
-                mx = (vals[j],j)
-            if vals[j]<=mn[0]:
-                mn = (vals[j],j)
-        print('mini,max: ', mn,mx)
+        mx,mn = (vals[-n],len(vals)-n ), (vals[-n],len(vals)-n )
+        for i in range(len(vals)-n,len(vals)):
+            if vals[i]>mx[0]:
+                mx = (vals[i],i)
+            if vals[i]<=mn[0]:
+                mn = (vals[i],i)
+        print(mn[0],mn[1]-n,mx[0],mx[1]-n)
         u = None
         if mx[1]>mn[1]:
             if mx[0]>v:
                 u = mx[0]
             else:
                 u = mn[0]
-        elif mx[1]<=mn[1]:
+        else:
             if mn[0]<v:
                 u = mn[0]
             else:
                 u = mx[0]
-
         s = (v-u)/u
-        vals[ind] = v
-        self.ind = (ind+1)%n
+        vals.append(v)
         return s
 
 
