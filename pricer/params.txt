@@ -1,5 +1,3 @@
-localhost root root pricer
-felipfmg17@gmail.com
 108
 api.bitso.com /v3/ticker/?book=xrp_mxn bitso xrp_mxn 60
 api.bitso.com /v3/ticker/?book=btc_mxn bitso btc_mxn 60
