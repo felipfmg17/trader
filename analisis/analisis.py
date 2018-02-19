@@ -44,35 +44,33 @@ class Ratio:
 		self.ind = (ind+1)%n
 		return s
 
+# search the first point with compares less and per or max than pair
+# returns 1: buy, 0: do nothing, -1: sells
 class Ratiog:
-    def __init__(self,vals):
+    def __init__(self,vals,per):
         self.n = len(vals)
         self.vals = vals[:]
         self.ind = 0
+        self.per = per
 
     def next(self,v):
-        vals,n,ind = self.vals,self.n,self.ind
-        mx,mn = (vals[-n],len(vals)-n ), (vals[-n],len(vals)-n )
-        for i in range(len(vals)-n,len(vals)):
-            if vals[i]>mx[0]:
-                mx = (vals[i],i)
-            if vals[i]<=mn[0]:
-                mn = (vals[i],i)
-        print(mn[0],mn[1]-n,mx[0],mx[1]-n)
-        u = None
-        if mx[1]>mn[1]:
-            if mx[0]>v:
-                u = mx[0]
-            else:
-                u = mn[0]
-        else:
-            if mn[0]<v:
-                u = mn[0]
-            else:
-                u = mx[0]
-        s = (v-u)/u
-        vals.append(v)
+        vals,n,ind,per = self.vals,self.n,self.ind,self.per
+        s = 0
+        for i in range(n):
+            j = (ind-i-1+n)%n
+            if (v-vals[j])/vals[j]>per:
+                s = 1
+                break
+            if (v-vals[j])/vals[j]<-per:
+                s = -1
+                break
+        vals[ind] = v
+        self.ind = (ind+1)%n
         return s
+
+
+
+# Uses Black Red Tree
 
 class Ratiof:
     def __init__(self,vals):
@@ -154,17 +152,16 @@ def calcEMA(vals,a):
 # tm: time in minutes to calculate Ratio
 # ptg: percentage to buy or sel
 def sim(pcs, cna, fee, aph, tm, ptg):
-    lbuy, lsell = ptg,-ptg
-    ema, dev = EMA(aph), Ratiog([pcs[0]] * tm)
+    ema, dev = EMA(aph), Ratiog([pcs[0]] * tm, ptg)
     ocna, cnb, fees = cna, 0, 0
     for p in pcs:
         d = dev.next( ema.next(p) )
-        if d>lbuy and cna>0 :
+        if d==1 and cna>0 :
             fees += cna * fee
             cna -= cna * fee
             cnb += cna / p
             cna = 0
-        elif d<lsell and cnb>0 :
+        elif d==-1 and cnb>0 :
             cna = cnb * p
             cnb = 0
             fees += cna * fee
@@ -181,22 +178,21 @@ def sim(pcs, cna, fee, aph, tm, ptg):
 # at the end prices are plotted
 def simg(pcs, cna, fee, aph, tm, ptg):
     print('\nSIMULATING:')
-    lbuy, lsell = ptg,-ptg
-    ema, dev, ems = EMA(aph), Ratiog([pcs[0]] * tm), []
+    ema, dev, ems = EMA(aph), Ratiog([pcs[0]] * tm, ptg), []
     ocna, cnb, sells, buys, fees = cna, 0, 0, 0, 0
     for i in range(len(pcs)):
         p = pcs[i]
         e = ema.next(p)
         ems.append(e)
         d = dev.next(e)
-        if d>lbuy and cna>0 :
+        if d==1 and cna>0 :
             fees += cna * fee
             cna -= cna * fee
             cnb += cna / p
             cna = 0
             buys += 1
             print('Buy:',i,p)
-        elif d<lsell and cnb>0 :
+        elif d==-1 and cnb>0 :
             cna = cnb * p
             cnb = 0
             fees += cna * fee
@@ -227,7 +223,7 @@ def simg(pcs, cna, fee, aph, tm, ptg):
 # load prices from database from date d0
 # to d1, dates are given in secons from epoch
 def loadPrices(d0,d1):
-    db = pymysql.connect('localhost','root','didu.2015','crypto_prices')
+    db = pymysql.connect('localhost','root','root','crypto_prices')
     sql = """ SELECT  a.price as Price
     FROM coin_price as a
     JOIN currency_pair as b
@@ -398,7 +394,7 @@ def test3():
     d0, d1 = 1514770796, 1515912230
     pm = Priceman(d0,d1)
 
-    pcs = pm.get('day5','day')
+    pcs = pm.get('zero','day')
     pcf = [pcs, 100, 0.001]
 
     #plot(pcs,0.1)
@@ -406,8 +402,8 @@ def test3():
     # limits
     lms = []
     lms.append((0.9, 1.0))  # alpha for EMA smoothing
-    lms.append((200, 600))     # minutes
-    lms.append((0.02, 0.25))   # percentage
+    lms.append((20, 300))     # minutes
+    lms.append((0.005, 0.3))   # percentage
 
     # rounding values
     rds = [5,5,5]
@@ -425,12 +421,11 @@ def test3():
         print('first specimen:',spc)
         bspc = mute(spc,evm)
         gen = list(min(bspc)[1])
-        prm = [ pm.get('day5','day'),100,0.001] + gen
+        prm = [ pm.get('zero','day'),100,0.001] + gen
         gn = sim(*prm)
-        break
 
 
-    prm = [ pm.get('day5','day'),100,0.001] + gen
+    prm = [ pm.get('zero','week'),100,0.001] + gen
     simg(*prm)
 
 
