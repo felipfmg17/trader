@@ -17,25 +17,11 @@ class EMA:
 		self.s = v if s==None else a*v +(1-a)*s
 		return self.s
 
-class SMA:
-	def __init__(self,vals):
-		self.n = len(vals)
-		self.vals = vals[:]
-		self.ind = 0
-		self.s = sum(vals)/len(vals)
-
-	def next(self,v):
-		vals,n,ind = self.vals,self.n,self.ind
-		self.s = self.s - vals[ind]/n + v/n
-		vals[ind] = v
-		self.ind = (ind+1)%n
-		return self.s
-
 class Ratio:
-	def __init__(self,vals,ptg):
-		self.n = len(vals)
-		self.vals = vals[:]
-		self.ind = 0
+    def __init__(self,vals,ptg):
+        self.n = len(vals)
+        self.vals = vals[:]
+        self.ind = 0
         self.ptg = ptg
         tr = RBTree()
         for i in range(self.n):
@@ -44,18 +30,43 @@ class Ratio:
             tr[vals[i]].add(i)
         self.tr = tr
 
-	def next(self,v):
-        vals,n,ind,per,tr = self.vals,self.n,self.ind,self.per,self.tr
+    def next(self,v):
+        vals,n,ind,ptg,tr = self.vals,self.n,self.ind,self.ptg,self.tr
         inds = []
+        # look for the indices which values compares smaller than percentage
         for vs in tr.value_slice(tr.min_key(), v/(1+ptg)+0.0001 ):
             for e in vs:
                 u = (e-ind+n)%n
                 inds.append(u)
+        # look for indices which values ocmpare greater than percentage
         for vs in tr.value_slice(v/(1-ptg), tr.max_key()+1 ):
             for e in vs:
                 u = (e-ind+n)%n
                 inds.append(u)
-        
+        s = 0
+        # get the last value from inds
+        if len(inds)>0:
+            u = (max(inds)+ind)%n
+            if vals[u]>v:
+                s = -1
+            elif vals[u]<v:
+                s = 1
+
+        # remove ind and vals[ind] from tr
+        pv = vals[ind]
+        mp = tr[pv]
+        mp.remove(ind)
+        if len(mp)==0:
+            del tr[pv]
+
+        # add ind and v to tr
+        if v not in tr:
+            tr[v] = set()
+        tr[v].add(ind)
+        vals[ind] = v
+        ind = (ind+1)%n
+
+        return s
 
 # search the first point with compares less and per or max than pair
 # returns 1: buy, 0: do nothing, -1: sells
@@ -81,47 +92,6 @@ class Ratiog:
         self.ind = (ind+1)%n
         return s
 
-
-
-# Uses Black Red Tree
-
-class Ratiof:
-    def __init__(self,vals):
-        self.n = len(vals)
-        self.vals = vals[:]
-        self.ind = 0
-        tr = RBTree()
-        for i in range(self.n):
-            if not vals[i] in tr:
-                tr[vals[i]] = set()
-            tr[vals[i]].add(i)
-        self.tr = tr
-
-    def next(self,v):
-        vals,n,ind,tr = self.vals,self.n,self.ind,self.tr
-        mn,mx = tr.min_item(), tr.max_item()
-        ar = []
-        if mn[0]<=v:
-            ar.extend(list(mn[1]))
-        if mx[0]>v:
-            ar.extend(list(mx[1]))
-        for i in range(len(ar)):
-            ar[i] =  (ar[i]-ind+n)%n
-        u = (max(ar)+ind)%n
-        s = (v-vals[u])/vals[u]
-        mp = tr[vals[ind]]
-        mp.remove(ind)
-        if len(mp)==0:
-            del tr[vals[ind]]
-        if not v in tr:
-            tr[v] = set()
-        tr[v].add(ind)
-        vals[ind] = v
-        self.ind = (ind+1)%n
-        return s
-
-
-
 class Priceman:
     def __init__(self,d0,d1):
         self.pcs = loadPrices(d0,d1)
@@ -138,26 +108,6 @@ class Priceman:
     def get(self,ini,s):
         return self.pcs[self.pm[ini]:self.pm[ini]+self.pm[s]]
 
-
-def calcSMA(vals,n):
-	series = []
-	s = 0
-	for i in range(n):
-		s += vals[i]
-	s /= n
-	series.append(s)
-	for i in range(n,len(vals)):
-		s -= vals[i-n]/n
-		s += vals[i]/n
-		series.append(s)
-	return series
-
-def calcEMA(vals,a):
-	series = [vals[0]]
-	for i in range(1,len(vals)):
-		s = series[-1]*(1-a) + vals[i]*a
-		series.append(s)
-	return series
 
 # pcs: prices to simulate in the form coinB/coinA
 # cna: coinA
@@ -303,9 +253,9 @@ def fitness(gen,evm):
     pms = pcf + list(gen)
     return round(sim(*pms),evm['frd'])
 
-# calculates adjacent spicimens to spc
-# modifing the i property of spc wit val
-def getadj(spc, i, val,evm):
+# calculates adjacent specimens to spc
+# modifing the i property of spc with val
+def getadj(spc, i, val, evm):
     nspc = None
     gn, gen = -spc[0],spc[1]
     ngen = list(gen)
@@ -349,18 +299,6 @@ def mute(spc,evm):
         dfs(u, vis, st, psm, evm)
         rps -= 1
     return psm
-
-def repr(s1,s2):
-    ngen = []
-    for i in range(len(s1[1])):
-        j = random.randint(2)
-        if j==0:
-            ngen.append(s1[1][i])
-        else:
-            ngen.append(s2[1][i])
-    ngn = fitness(ngen)
-    return (-ngn,tuple(ngen))
-
 
 def plot(pcs,aph):
     ema = calcEMA(pcs,aph)

@@ -2,6 +2,11 @@ import bintrees
 from bintrees import RBTree
 
 
+
+ar = []
+
+print(max(ar))
+
 tr = RBTree()
 
 for i in range(10):
