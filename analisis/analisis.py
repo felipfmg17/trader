@@ -32,17 +32,24 @@ class SMA:
 		return self.s
 
 class Ratio:
-	def __init__(self,vals):
+	def __init__(self,vals,ptg):
 		self.n = len(vals)
 		self.vals = vals[:]
 		self.ind = 0
+        self.ptg = ptg
+        tr = RBTree()
+        for i in range(self.n):
+            if not vals[i] in tr:
+                tr[vals[i]] = set()
+            tr[vals[i]].add(i)
+        self.tr = tr
 
 	def next(self,v):
-		vals,n,ind = self.vals,self.n,self.ind
-		s = (v-vals[ind])/vals[ind]
-		vals[ind] = v
-		self.ind = (ind+1)%n
-		return s
+        vals,n,ind,per,tr = self.vals,self.n,self.ind,self.per,self.tr
+        inds = []
+        for k,v in tr.item_slice(tr.min_key(), v/(1+ptg)+0.01 ):
+            
+		
 
 # search the first point with compares less and per or max than pair
 # returns 1: buy, 0: do nothing, -1: sells
