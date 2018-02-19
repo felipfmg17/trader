@@ -17,7 +17,7 @@ print(clk)
 
 slc = tr.key_slice(tr.min_key(),3.001)
 print(list(slc))
-slc2 = tr.key_slice(6,tr.max_key()+0.001)
+slc2 = tr.value_slice(6,tr.max_key()+0.001)
 print(list(slc2))
 
 

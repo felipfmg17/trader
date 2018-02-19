@@ -47,9 +47,15 @@ class Ratio:
 	def next(self,v):
         vals,n,ind,per,tr = self.vals,self.n,self.ind,self.per,self.tr
         inds = []
-        for k,v in tr.item_slice(tr.min_key(), v/(1+ptg)+0.01 ):
-            
-		
+        for vs in tr.value_slice(tr.min_key(), v/(1+ptg)+0.0001 ):
+            for e in vs:
+                u = (e-ind+n)%n
+                inds.append(u)
+        for vs in tr.value_slice(v/(1-ptg), tr.max_key()+1 ):
+            for e in vs:
+                u = (e-ind+n)%n
+                inds.append(u)
+        
 
 # search the first point with compares less and per or max than pair
 # returns 1: buy, 0: do nothing, -1: sells
