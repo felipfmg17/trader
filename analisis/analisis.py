@@ -74,7 +74,6 @@ class Ratiog:
         vals.append(v)
         return s
 
-
 class Ratiof:
     def __init__(self,vals):
         self.n = len(vals)
@@ -109,6 +108,8 @@ class Ratiof:
         vals[ind] = v
         self.ind = (ind+1)%n
         return s
+
+
 
 class Priceman:
     def __init__(self,d0,d1):
