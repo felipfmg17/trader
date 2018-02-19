@@ -107,7 +107,7 @@ class ErrorState:
         msg = ''
         if self.lk.acquire():
             for u,v in self.bkt.items():
-                msg += u + ' ' + str(v)
+                msg += u + ' ' + str(v) +'\n'
             self.lk.release()
         return msg
 
@@ -162,7 +162,6 @@ def startMultiDownload():
         ths.append(th)
     for th in ths:
         th.join()
-
 
 startMultiDownload()
 
