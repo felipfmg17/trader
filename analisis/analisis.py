@@ -13,9 +13,11 @@ class EMA:
 
 	def next(self,v):
 		s,a = self.s, self.a
-		self.s = v if s==None else a*v +(1-a)*s
+		self.s = v if s==None else a*v + (1-a)*s
 		return round(self.s,3)
 
+# Ratio using Red Black Tree
+# returns 1: buy, 0: do nothing, -1: sells
 class Ratio:
     def __init__(self,vals,ptg):
         self.n = len(vals)
@@ -33,7 +35,7 @@ class Ratio:
         vals,n,ind,ptg,tr = self.vals,self.n,self.ind,self.ptg,self.tr
         inds = []
 
-        #
+        # searching for low values
         lim = v/(1+ptg)
         it = tr.minimum
         while it and it.key<=lim:
@@ -42,6 +44,7 @@ class Ratio:
                 inds.append(u)
             it = it.successor
 
+        # searching for high values
         lim = v/(1-ptg)
         it = tr.maximum
         while it and it.key>=lim:
@@ -50,9 +53,8 @@ class Ratio:
                 inds.append(u)
             it = it.predecessor
 
-        #print('inds size:',len(inds))
 
-        # get the last value from inds
+        # get the last added value from inds
         s = 0
         if len(inds)>0:
             u = (max(inds)+ind)%n
@@ -77,7 +79,7 @@ class Ratio:
 
         return s
 
-# search the first point with compares less and per or max than pair
+# search the first point which compares less than per or max than per
 # returns 1: buy, 0: do nothing, -1: sells
 class Ratiog:
     def __init__(self,vals,per):
@@ -88,7 +90,6 @@ class Ratiog:
 
     def next(self,v):
         vals,n,ind,per = self.vals,self.n,self.ind,self.per
-        #print(vals)
         s = 0
         for i in range(n):
             j = (ind-i-1+n)%n
@@ -113,6 +114,7 @@ class Priceman:
         pm['day3'] = pm['day']*3
         pm['day5'] = pm['day']*5
         pm['week'] = pm['day']*7
+        pm['week2'] = pm['week']*2
         self.pm = pm
 
     def get(self,ini,s):
@@ -264,9 +266,8 @@ def born(evm):
 # Given a gen, calculates the percentage gain
 # during a buy an sell simulation
 def fitness(gen,evm):
-    pcf = evm['pcf']
-    pms = pcf + list(gen)
-    return round(sim(*pms),evm['frd'])
+    pms = evm['pcf'] + list(gen)
+    return round( sim(*pms), evm['frd'] )
 
 # calculates adjacent specimens to spc
 # modifing the i property of spc with val
@@ -304,7 +305,7 @@ def dfs(u,vis,st,psm,evm):
         print('Perfect specimen:',u)
 
 # psm: perfect specimens
-# rps number of  repetitions fo the while
+# rps number of  repetitions of the while
 def mute(spc,evm):
     st, psm, vis, rps = [], set(), set(), 100
     hp.heappush(st, spc)
@@ -314,12 +315,6 @@ def mute(spc,evm):
         dfs(u, vis, st, psm, evm)
         rps -= 1
     return psm
-
-def plot(pcs,aph):
-    ema = calcEMA(pcs,aph)
-    plt.plot(pcs)
-    plt.plot(ema)
-    plt.show()
 
 
 def test2():
