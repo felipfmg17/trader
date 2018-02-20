@@ -1,21 +1,20 @@
-import matplotlib.pyplot as plt
 import math
 import random
-import pymysql
 import time
+import pymysql
+import matplotlib.pyplot as plt
 import heapq as hp
-import bintrees
-from bintrees import RBTree
+from red_black_dict_mod import RedBlackTree
 
 class EMA:
 	def __init__(self,a):
-		self.a=a
-		self.s=None
+		self.a = a
+		self.s = None
 
 	def next(self,v):
 		s,a = self.s, self.a
 		self.s = v if s==None else a*v +(1-a)*s
-		return self.s
+		return round(self.s,3)
 
 class Ratio:
     def __init__(self,vals,ptg):
@@ -23,7 +22,7 @@ class Ratio:
         self.vals = vals[:]
         self.ind = 0
         self.ptg = ptg
-        tr = RBTree()
+        tr = RedBlackTree()
         for i in range(self.n):
             if not vals[i] in tr:
                 tr[vals[i]] = set()
@@ -33,18 +32,28 @@ class Ratio:
     def next(self,v):
         vals,n,ind,ptg,tr = self.vals,self.n,self.ind,self.ptg,self.tr
         inds = []
-        # look for the indices which values compares smaller than percentage
-        for vs in tr.value_slice(tr.min_key(), v/(1+ptg)+0.0001 ):
-            for e in vs:
+
+        #
+        lim = v/(1+ptg)
+        it = tr.minimum
+        while it and it.key<=lim:
+            for e in it.value:
                 u = (e-ind+n)%n
                 inds.append(u)
-        # look for indices which values ocmpare greater than percentage
-        for vs in tr.value_slice(v/(1-ptg), tr.max_key()+1 ):
-            for e in vs:
+            it = it.successor
+
+        lim = v/(1-ptg)
+        it = tr.maximum
+        while it and it.key>=lim:
+            for e in it.value:
                 u = (e-ind+n)%n
                 inds.append(u)
-        s = 0
+            it = it.predecessor
+
+        #print('inds size:',len(inds))
+
         # get the last value from inds
+        s = 0
         if len(inds)>0:
             u = (max(inds)+ind)%n
             if vals[u]>v:
@@ -64,7 +73,7 @@ class Ratio:
             tr[v] = set()
         tr[v].add(ind)
         vals[ind] = v
-        ind = (ind+1)%n
+        self.ind = (ind+1)%n
 
         return s
 
@@ -79,6 +88,7 @@ class Ratiog:
 
     def next(self,v):
         vals,n,ind,per = self.vals,self.n,self.ind,self.per
+        #print(vals)
         s = 0
         for i in range(n):
             j = (ind-i-1+n)%n
@@ -141,8 +151,11 @@ def sim(pcs, cna, fee, aph, tm, ptg):
 # at the end prices are plotted
 def simg(pcs, cna, fee, aph, tm, ptg):
     print('\nSIMULATING:')
-    ema, dev, ems = EMA(aph), Ratiog([pcs[0]] * tm, ptg), []
+    ema, dev, ems = EMA(aph), Ratio([pcs[0]] * tm, ptg), []
     ocna, cnb, sells, buys, fees = cna, 0, 0, 0, 0
+
+    t0 = time.time()
+
     for i in range(len(pcs)):
         p = pcs[i]
         e = ema.next(p)
@@ -169,6 +182,8 @@ def simg(pcs, cna, fee, aph, tm, ptg):
         sells += 1
         print('Sell:',i,p)
     gain = (cna - ocna) / ocna
+
+    print(round(time.time()-t0,3),'\n')
 
     print('\n')
     print('alpha:',aph,'tm:',tm,'ptg:',ptg)
@@ -310,10 +325,10 @@ def plot(pcs,aph):
 def test2():
     d0, d1 = 1514770796, 1515912230
     pm = Priceman(d0,d1)
-    pcs = pm.get('day5','day')
+    pcs = pm.get('zero','week')
     #pcs = pricesmanager()['week']
     pcf = [pcs,100,0.001]
-    gen = (0.90957, 230, 0.02362)
+    gen = (0.10957, 800, 0.09362)
     gen = list(gen)
     prm = pcf + gen
     gn = simg(*prm)
