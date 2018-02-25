@@ -105,7 +105,7 @@ class Ratiog:
 
 class Priceman:
     def __init__(self,d0,d1):
-        self.pcs = loadPrices(d0,d1)
+        self.pcs = self.loadPrices(d0,d1)
         pm = {}
         pm['zero'] = 0
         pm['hour'] = 60
@@ -126,6 +126,26 @@ class Priceman:
         if s=='full':
             return self.pcs[ ini: ]
         return self.pcs[ ini : ini+s ]
+
+    # load prices from database from date d0
+    # to d1, dates are given in secons from epoch
+    def loadPrices(self,d0,d1):
+        db = pymysql.connect('localhost','root','root','pricer')
+        sql = """ SELECT  a.price as Price
+        FROM coin_price as a
+        JOIN currency_pair as b
+        ON a.currency_pair_id = b.id
+        JOIN exchange as c
+        ON a.exchange_id = c.id
+        WHERE c.name = \"bitso\"
+        AND b.name = \"xrp_mxn\" """
+        sql += ' AND a.date_time_sec > '  + str(d0)
+        sql += ' AND a.date_time_sec < '  + str(d1)
+        cursor = db.cursor()
+        cursor.execute(sql)
+        lines = cursor.fetchall()
+        prices = [ e[0] for e in lines ]
+        return prices;
 
 
 # pcs: prices to simulate in the form coinB/coinA
@@ -207,26 +227,46 @@ def simg(pcs, cna, fee, aph, tm, ptg):
     plt.plot(ems)
     plt.show()
 
-# load prices from database from date d0
-# to d1, dates are given in secons from epoch
-def loadPrices(d0,d1):
-    db = pymysql.connect('localhost','root','root','pricer')
-    sql = """ SELECT  a.price as Price
-    FROM coin_price as a
-    JOIN currency_pair as b
-    ON a.currency_pair_id = b.id
-    JOIN exchange as c
-    ON a.exchange_id = c.id
-    WHERE c.name = \"bitso\"
-    AND b.name = \"xrp_mxn\" """
-    sql += ' AND a.date_time_sec > '  + str(d0)
-    sql += ' AND a.date_time_sec < '  + str(d1)
-    cursor = db.cursor()
-    cursor.execute(sql)
-    lines = cursor.fetchall()
-    prices = [ e[0] for e in lines ]
-    return prices;
+def getevm():
+    #random.seed(time.time())
 
+    mtt = []
+    difs =  [ (i+1)/10000 for i in range(10)]
+    difs = difs + [-v for v in difs]
+    mtt.append(difs)
+
+    idifs = [ (i+1)*10 for i in range(10)] 
+    idifs = idifs + [-v for v in idifs]
+    mtt.append(idifs)
+
+    difs =  [ (i+1)/1000 for i in range(10)]
+    difs = difs + [-v for v in difs] 
+    mtt.append(difs)
+
+    d0, d1 = 1517103819, 1519516817
+    pm = Priceman(d0,d1)
+    pcs = pm.gets(pm.pm['week2'] , pm.pm['day']*4)
+    pcf = [pcs, 100, 0.001]
+
+
+    # limits
+    lms = []
+    lms.append((0.008, 0.015))  # alpha for EMA smoothing
+    #lms.append((20,30))     # minutes
+    lms.append((700, 1000))     # minutes
+    lms.append((0.03, 0.10))   # percentage
+
+    # rounding values
+    rds = [5,5,5]
+
+    evm = {}
+    evm['mtt'] = mtt  # mutation table
+    evm['pcf'] = pcf  # prices, coins, fees
+    evm['lms'] = lms  # limits
+    evm['rds'] = rds  #rounding values
+    evm['frd'] = 8  # rounding for fitness
+
+    return evm
 
 # Generates a new random gen
 def born(evm):
@@ -281,13 +321,15 @@ def dfs(u,vis,st,psm,evm):
                 vis.add(v[1])
                 kds = True
     if kds==False:
-        psm[-u[0]] = u[1]
+        if u[0]<0:
+            psm[-u[0]] = u[1]
         #print('Perfect specimen:',u)
 
 # psm: perfect specimens
 # rps number of  repetitions of the while
 def perfect(spc,evm):
-    st, psm, vis, rps = [], {}, set(), 80
+    print('perfecting')
+    st, psm, vis, rps = [], {}, set(), 15
     hp.heappush(st, spc)
     vis.add(spc[1])
     while len(st)>0 and len(psm)<3 and rps>0:
@@ -296,56 +338,62 @@ def perfect(spc,evm):
         rps -= 1
     return psm
 
-def getevm():
-    #random.seed(time.time())
-
-    mtt = []
-    difs =  [ (i+1)/10000 for i in range(10)]
-    difs = difs + [-v for v in difs]
-    mtt.append(difs)
-
-    idifs = [ (i+1)*10 for i in range(10)] 
-    idifs = idifs + [-v for v in idifs]
-    mtt.append(idifs)
-
-    difs =  [ (i+1)/1000 for i in range(10)]
-    difs = difs + [-v for v in difs] 
-    mtt.append(difs)
-
-    d0, d1 = 1517103819, 1519516817
-    pm = Priceman(d0,d1)
-    pcs = pm.gets(pm.pm['week2'] , pm.pm['day']*4)
-    pcf = [pcs, 100, 0.001]
-
-
-    # limits
-    lms = []
-    lms.append((0.008, 0.015))  # alpha for EMA smoothing
-    lms.append((700, 1000))     # minutes
-    lms.append((0.03, 0.10))   # percentage
-
-    # rounding values
-    rds = [5,5,5]
-
-    evm = {}
-    evm['mtt'] = mtt  # mutation table
-    evm['pcf'] = pcf  # prices, coins, fees
-    evm['lms'] = lms  # limits
-    evm['rds'] = rds  #rounding values
-    evm['frd'] = 8  # rounding for fitness
-
-    return evm
-
 # pps : population
 def populate(evm):
+    print('populating...')
     pps = {}
     for i in range(5):
         spc = born(evm)
         psm = perfect(spc,evm)
         pps.update(psm)
-    pps = [ (-k,v) for k,v in pps.items() ]
     return pps
 
+
+def test4():
+    evm = getevm()
+    pps = populate(evm)
+
+
+def test5():
+    evm = getevm()
+    d0, d1 = 1517103819, 1519516817
+    pm = Priceman(d0,d1)
+    pcs = []
+    pcf = [pcs, 100, 0.001]
+
+    tpps = {}
+    n = len(pm.pcs)
+    ini = 0
+    offs = 60*24
+    while ini+offs<n:
+        pcs = pm.gets(ini,offs)
+        ini += offs
+        pcf[0] = pcs
+        evm['pcf'] = pcf
+        pps = populate(evm)
+        print(pps)
+        tpps.update(pps)
+
+    pcs = pm.gets( 0 , 'full' )
+    pcf[0] = pcs
+    for k,v in tpps.items():
+        prm = pcf + list(v)
+        print(k,v,sim(*prm))
+        print()
+
+
+    tpps = [ (k,v) for k,v in tpps.items() ]
+    tpps = sorted(tpps)
+    print('Perfects specimens from 4 days environments during 3 weeks')
+    print(tpps)
+
+    s = ''
+    for spc in tpps:
+        s += str(spc[0]) + ' ' + str(spc[1]) + '\n'
+
+    fout = open('perfs.txt','w')
+    fout.write(s)
+    fout.close()
 
 
 
@@ -427,6 +475,6 @@ def test3():
 
 
 
-test()
+test5()
 
 
