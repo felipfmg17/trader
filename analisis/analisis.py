@@ -228,29 +228,8 @@ def loadPrices(d0,d1):
     return prices;
 
 
-def pricesmanager():
-    d0,d1 = 1514770796,1519516817
-    pcs = loadPrices(d0,d1)
-    minu = 1
-    hour = minu*60
-    hour8 = hour*8
-    day = hour*24
-    day3 = day*3
-    week = day*7
-
-    pm = {}
-    pm['hour'] = pcs[:hour]
-    pm['hour8'] = pcs[:hour8]
-    pm['day'] = pcs[:day]
-    pm['day3'] = pcs[:day3]
-    pm['week'] = pcs[:week]
-    pm['full'] = pcs[:]
-
-    return pm
-
 # Generates a new random gen
-#
-def randgen(evm):
+def born(evm):
     gen = []
     lms = evm['lms']
     gen.append( random.uniform(lms[0][0],lms[0][1]) )
@@ -260,15 +239,9 @@ def randgen(evm):
     for i in range(len(rds)):
         gen[i] = round(gen[i],rds[i])
     gen = tuple(gen)
-    return gen
-
-def born(evm):
-    gen = randgen(evm)
     gn = fitness(gen,evm)
-    #while gn<=0:
-     #   gen = randgen(evm)
-    #    gn = fitness(gen,evm)
     return (-gn,tuple(gen))
+
 
 # Given a gen, calculates the percentage gain
 # during a buy an sell simulation
@@ -308,20 +281,72 @@ def dfs(u,vis,st,psm,evm):
                 vis.add(v[1])
                 kds = True
     if kds==False:
-        psm.add(u)
-        print('Perfect specimen:',u)
+        psm[-u[0]] = u[1]
+        #print('Perfect specimen:',u)
 
 # psm: perfect specimens
 # rps number of  repetitions of the while
-def mute(spc,evm):
-    st, psm, vis, rps = [], set(), set(), 100
+def perfect(spc,evm):
+    st, psm, vis, rps = [], {}, set(), 80
     hp.heappush(st, spc)
     vis.add(spc[1])
-    while len(st)>0 and len(psm)<5 and rps>0:
+    while len(st)>0 and len(psm)<3 and rps>0:
         u = hp.heappop(st)
         dfs(u, vis, st, psm, evm)
         rps -= 1
     return psm
+
+def getevm():
+    #random.seed(time.time())
+
+    mtt = []
+    difs =  [ (i+1)/10000 for i in range(10)]
+    difs = difs + [-v for v in difs]
+    mtt.append(difs)
+
+    idifs = [ (i+1)*10 for i in range(10)] 
+    idifs = idifs + [-v for v in idifs]
+    mtt.append(idifs)
+
+    difs =  [ (i+1)/1000 for i in range(10)]
+    difs = difs + [-v for v in difs] 
+    mtt.append(difs)
+
+    d0, d1 = 1517103819, 1519516817
+    pm = Priceman(d0,d1)
+    pcs = pm.gets(pm.pm['week2'] , pm.pm['day']*4)
+    pcf = [pcs, 100, 0.001]
+
+
+    # limits
+    lms = []
+    lms.append((0.008, 0.015))  # alpha for EMA smoothing
+    lms.append((700, 1000))     # minutes
+    lms.append((0.03, 0.10))   # percentage
+
+    # rounding values
+    rds = [5,5,5]
+
+    evm = {}
+    evm['mtt'] = mtt  # mutation table
+    evm['pcf'] = pcf  # prices, coins, fees
+    evm['lms'] = lms  # limits
+    evm['rds'] = rds  #rounding values
+    evm['frd'] = 8  # rounding for fitness
+
+    return evm
+
+# pps : population
+def populate(evm):
+    pps = {}
+    for i in range(5):
+        spc = born(evm)
+        psm = perfect(spc,evm)
+        pps.update(psm)
+    pps = [ (-k,v) for k,v in pps.items() ]
+    return pps
+
+
 
 
 def test():
@@ -398,6 +423,7 @@ def test3():
         print('Best gen',gen)
 
     print(bgns)
+
 
 
 
