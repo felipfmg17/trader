@@ -115,10 +115,17 @@ class Priceman:
         pm['day5'] = pm['day']*5
         pm['week'] = pm['day']*7
         pm['week2'] = pm['week']*2
+        pm['week3'] = pm['week']*3
+        pm['full'] = 'full'
         self.pm = pm
 
     def get(self,ini,s):
         return self.pcs[self.pm[ini]:self.pm[ini]+self.pm[s]]
+
+    def gets(self,ini,s):
+        if s=='full':
+            return self.pcs[ ini: ]
+        return self.pcs[ ini : ini+s ]
 
 
 # pcs: prices to simulate in the form coinB/coinA
@@ -153,7 +160,7 @@ def sim(pcs, cna, fee, aph, tm, ptg):
 # at the end prices are plotted
 def simg(pcs, cna, fee, aph, tm, ptg):
     print('\nSIMULATING:')
-    ema, dev, ems = EMA(aph), Ratio([pcs[0]] * tm, ptg), []
+    ema, dev, ems = EMA(aph), Ratiog([pcs[0]] * tm, ptg), []
     ocna, cnb, sells, buys, fees = cna, 0, 0, 0, 0
 
     t0 = time.time()
@@ -185,7 +192,7 @@ def simg(pcs, cna, fee, aph, tm, ptg):
         print('Sell:',i,p)
     gain = (cna - ocna) / ocna
 
-    print(round(time.time()-t0,3),'\n')
+    print('time: ',round(time.time()-t0,3),'\n')
 
     print('\n')
     print('alpha:',aph,'tm:',tm,'ptg:',ptg)
@@ -203,7 +210,7 @@ def simg(pcs, cna, fee, aph, tm, ptg):
 # load prices from database from date d0
 # to d1, dates are given in secons from epoch
 def loadPrices(d0,d1):
-    db = pymysql.connect('localhost','root','root','crypto_prices')
+    db = pymysql.connect('localhost','root','root','pricer')
     sql = """ SELECT  a.price as Price
     FROM coin_price as a
     JOIN currency_pair as b
@@ -222,7 +229,7 @@ def loadPrices(d0,d1):
 
 
 def pricesmanager():
-    d0,d1 = 1514770796,1515912230
+    d0,d1 = 1514770796,1519516817
     pcs = loadPrices(d0,d1)
     minu = 1
     hour = minu*60
@@ -317,34 +324,32 @@ def mute(spc,evm):
     return psm
 
 
-def test2():
-    d0, d1 = 1514770796, 1515912230
+def test():
+    d0, d1 = 1517103819, 1519516817
     pm = Priceman(d0,d1)
-    pcs = pm.get('zero','week')
-    #pcs = pricesmanager()['week']
+    pcs = pm.gets(pm.pm['week2'] , pm.pm['day'])
     pcf = [pcs,100,0.001]
-    gen = (0.10957, 800, 0.09362)
-    gen = list(gen)
+    gen = [0.08,100,0.02]
     prm = pcf + gen
-    gn = simg(*prm)
+    simg(*prm)
 
-
-
-    # ema = calcEMA(pcs,0.0477)
-    # plt.plot(pcs)
-    # plt.plot(ema)
-    # plt.show()
+def test2():
+    d0, d1 = 1517103819, 1519516817
+    pm = Priceman(d0,d1)
+    pcs = pm.gets(pm.pm['week2'] , pm.pm['day'])
+    plt.plot(pcs)
+    plt.show()
 
 def test3():
 
     random.seed(time.time())
 
     mtt = []
-    difs =  [ ]
+    difs =  [ (i+1)/1000 for i in range(10)]
     difs = difs + [-v for v in difs]
     mtt.append(difs)
 
-    idifs = [ (i+1) for i in range(10)]
+    idifs = [ (i+1) for i in range(10)] + [15,20,30]
     idifs = idifs + [-v for v in idifs]
     mtt.append(idifs)
 
@@ -352,19 +357,19 @@ def test3():
     difs = difs + [-v for v in difs] 
     mtt.append(difs)
 
-    d0, d1 = 1514770796, 1515912230
+    d0, d1 = 1517103819, 1519516817
     pm = Priceman(d0,d1)
 
-    pcs = pm.get('zero','day')
+    pcs = pm.gets(pm.pm['week2'] , pm.pm['day'])
     pcf = [pcs, 100, 0.001]
 
     #plot(pcs,0.1)
 
     # limits
     lms = []
-    lms.append((0.9, 1.0))  # alpha for EMA smoothing
-    lms.append((20, 300))     # minutes
-    lms.append((0.005, 0.3))   # percentage
+    lms.append((0.05, 0.12))  # alpha for EMA smoothing
+    lms.append((60, 250))     # minutes
+    lms.append((0.005, 0.03))   # percentage
 
     # rounding values
     rds = [5,5,5]
@@ -382,14 +387,14 @@ def test3():
         print('first specimen:',spc)
         bspc = mute(spc,evm)
         gen = list(min(bspc)[1])
-        prm = [ pm.get('zero','day'),100,0.001] + gen
+        prm = [ pm.gets(pm.pm['week2'] , pm.pm['day']) ,100,0.001] + gen
         gn = sim(*prm)
 
 
-    prm = [ pm.get('zero','week'),100,0.001] + gen
+    prm = [ pm.gets(pm.pm['week2'] , pm.pm['day']),100,0.001] + gen
     simg(*prm)
 
 
-test2()
+test3()
 
 
