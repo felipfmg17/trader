@@ -134,7 +134,7 @@ class Priceman:
 # tm: time in minutes to calculate Ratio
 # ptg: percentage to buy or sel
 def sim(pcs, cna, fee, aph, tm, ptg):
-    ema, dev = EMA(aph), Ratiog([pcs[0]] * tm, ptg)
+    ema, dev = EMA(aph), Ratio([pcs[0]] * tm, ptg)
     ocna, cnb, fees = cna, 0, 0
     for p in pcs:
         d = dev.next( ema.next(p) )
@@ -160,7 +160,7 @@ def sim(pcs, cna, fee, aph, tm, ptg):
 # at the end prices are plotted
 def simg(pcs, cna, fee, aph, tm, ptg):
     print('\nSIMULATING:')
-    ema, dev, ems = EMA(aph), Ratiog([pcs[0]] * tm, ptg), []
+    ema, dev, ems = EMA(aph), Ratio([pcs[0]] * tm, ptg), []
     ocna, cnb, sells, buys, fees = cna, 0, 0, 0, 0
 
     t0 = time.time()
@@ -327,9 +327,10 @@ def mute(spc,evm):
 def test():
     d0, d1 = 1517103819, 1519516817
     pm = Priceman(d0,d1)
-    pcs = pm.gets(pm.pm['week2'] , pm.pm['day'])
+    #pcs = pm.gets(pm.pm['week2'] , pm.pm['day']*4 )
+    pcs = pm.gets(pm.pm['zero'] , pm.pm['full'] )
     pcf = [pcs,100,0.001]
-    gen = [0.08,100,0.02]
+    gen = [0.00816, 800, 0.03286]
     prm = pcf + gen
     simg(*prm)
 
@@ -345,11 +346,11 @@ def test3():
     random.seed(time.time())
 
     mtt = []
-    difs =  [ (i+1)/1000 for i in range(10)]
+    difs =  [ (i+1)/10000 for i in range(10)]
     difs = difs + [-v for v in difs]
     mtt.append(difs)
 
-    idifs = [ (i+1) for i in range(10)] + [15,20,30]
+    idifs = [ (i+1)*10 for i in range(10)] 
     idifs = idifs + [-v for v in idifs]
     mtt.append(idifs)
 
@@ -360,16 +361,16 @@ def test3():
     d0, d1 = 1517103819, 1519516817
     pm = Priceman(d0,d1)
 
-    pcs = pm.gets(pm.pm['week2'] , pm.pm['day'])
+    pcs = pm.gets(pm.pm['week2'] , pm.pm['day']*4)
     pcf = [pcs, 100, 0.001]
 
     #plot(pcs,0.1)
 
     # limits
     lms = []
-    lms.append((0.05, 0.12))  # alpha for EMA smoothing
-    lms.append((60, 250))     # minutes
-    lms.append((0.005, 0.03))   # percentage
+    lms.append((0.008, 0.015))  # alpha for EMA smoothing
+    lms.append((700, 1000))     # minutes
+    lms.append((0.03, 0.10))   # percentage
 
     # rounding values
     rds = [5,5,5]
@@ -381,20 +382,25 @@ def test3():
     evm['rds'] = rds  #rounding values
     evm['frd'] = 8  # rounding for fitness
 
-    gn = 0
-    while gn<=0:
-        spc = born(evm)
-        print('first specimen:',spc)
-        bspc = mute(spc,evm)
-        gen = list(min(bspc)[1])
-        prm = [ pm.gets(pm.pm['week2'] , pm.pm['day']) ,100,0.001] + gen
-        gn = sim(*prm)
+    bgns = []
+    for its in range(5):
+        gn = 0
+        bspc = None
+        gen =  None
+        while gn<=0:
+            spc = born(evm)
+            print('first specimen:',spc)
+            bspc = mute(spc,evm)
+            gen = list(min(bspc)[1])
+            prm = pcf + gen
+            gn = sim(*prm)
+        bgns.append(gen)
+        print('Best gen',gen)
+
+    print(bgns)
 
 
-    prm = [ pm.gets(pm.pm['week2'] , pm.pm['day']),100,0.001] + gen
-    simg(*prm)
 
-
-test3()
+test()
 
 

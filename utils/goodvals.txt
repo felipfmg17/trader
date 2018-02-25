@@ -1,13 +1,4 @@
-(0.272, 146, 0.021)
 
 
-# prices from january 1st to 14th
-
-# worked for 30 % gain in 1 and 3 days,  10% gain in a week, no loses during falling prices
-(0.0972, 100, 0.03092)
-
-
-# 16% week
-(0.14531, 156, 0.03994)
-
-
+# 4 days 12.4% profit
+(-0.1248612, (0.00816, 800, 0.03286))
