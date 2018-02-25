@@ -322,7 +322,7 @@ def dfs(u,vis,st,psm,evm):
                 kds = True
     if kds==False:
         if u[0]<0:
-            psm[-u[0]] = u[1]
+            psm[u[0]] = u[1]
         #print('Perfect specimen:',u)
 
 # psm: perfect specimens
@@ -403,7 +403,7 @@ def test():
     #pcs = pm.gets(pm.pm['week2'] , pm.pm['day']*4 )
     pcs = pm.gets(pm.pm['zero'] , pm.pm['full'] )
     pcf = [pcs,100,0.001]
-    gen = [0.00816, 800, 0.03286]
+    gen = [0.00874, 867, 0.03295]
     prm = pcf + gen
     simg(*prm)
 
@@ -473,8 +473,7 @@ def test3():
     print(bgns)
 
 
-
-
-test5()
+if __name__ == '__main__':
+    test()
 
 

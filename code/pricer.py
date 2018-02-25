@@ -163,7 +163,8 @@ def startMultiDownload():
     for th in ths:
         th.join()
 
-startMultiDownload()
+if __name__ == '__main__':
+    startMultiDownload()
 
 
 
