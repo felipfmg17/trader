@@ -1,5 +1,13 @@
-import analisis
-import pricer
+from analisis import Ratio,EMA,Priceman
+from pricer import downloadResource,extractPrice
 
 
-print('soy el bot')
+def trade(pcs, aph, tm, ptg):
+	ema = EMA(aph)
+	dev = Ratio(pcs, ptg)
+
+	while True:
+		p = nextprice()
+		d = dev.next( ema.next(p) )
+		sendsignal(d)
+

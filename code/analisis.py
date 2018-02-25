@@ -349,10 +349,6 @@ def populate(evm):
     return pps
 
 
-def test4():
-    evm = getevm()
-    pps = populate(evm)
-
 
 def test5():
     evm = getevm()
@@ -406,71 +402,6 @@ def test():
     gen = [0.00874, 867, 0.03295]
     prm = pcf + gen
     simg(*prm)
-
-def test2():
-    d0, d1 = 1517103819, 1519516817
-    pm = Priceman(d0,d1)
-    pcs = pm.gets(pm.pm['week2'] , pm.pm['day'])
-    plt.plot(pcs)
-    plt.show()
-
-def test3():
-
-    random.seed(time.time())
-
-    mtt = []
-    difs =  [ (i+1)/10000 for i in range(10)]
-    difs = difs + [-v for v in difs]
-    mtt.append(difs)
-
-    idifs = [ (i+1)*10 for i in range(10)] 
-    idifs = idifs + [-v for v in idifs]
-    mtt.append(idifs)
-
-    difs =  [ (i+1)/1000 for i in range(10)]
-    difs = difs + [-v for v in difs] 
-    mtt.append(difs)
-
-    d0, d1 = 1517103819, 1519516817
-    pm = Priceman(d0,d1)
-
-    pcs = pm.gets(pm.pm['week2'] , pm.pm['day']*4)
-    pcf = [pcs, 100, 0.001]
-
-    #plot(pcs,0.1)
-
-    # limits
-    lms = []
-    lms.append((0.008, 0.015))  # alpha for EMA smoothing
-    lms.append((700, 1000))     # minutes
-    lms.append((0.03, 0.10))   # percentage
-
-    # rounding values
-    rds = [5,5,5]
-
-    evm = {}
-    evm['mtt'] = mtt  # mutation table
-    evm['pcf'] = pcf  # prices, coins, fees
-    evm['lms'] = lms  # limits
-    evm['rds'] = rds  #rounding values
-    evm['frd'] = 8  # rounding for fitness
-
-    bgns = []
-    for its in range(5):
-        gn = 0
-        bspc = None
-        gen =  None
-        while gn<=0:
-            spc = born(evm)
-            print('first specimen:',spc)
-            bspc = mute(spc,evm)
-            gen = list(min(bspc)[1])
-            prm = pcf + gen
-            gn = sim(*prm)
-        bgns.append(gen)
-        print('Best gen',gen)
-
-    print(bgns)
 
 
 if __name__ == '__main__':
