@@ -41,6 +41,36 @@ def extractPrice(data, exchange):
         jsonObj = json.loads(data)
         price = jsonObj['lastPrice']
         return price
+    elif exchange=='poloniex':
+        price = None
+        data = data.decode('utf-8')
+        jsonObj = json.loads(data)
+        price = jsonObj['USDT_XRP']['last']
+        return price
+    elif exchange=='hitbtc':
+        price = None
+        data = data.decode('utf-8')
+        jsonObj = json.loads(data)
+        price = jsonObj['last']
+        return price
+    elif exchange=='bitstamp':
+        price = None
+        data = data.decode('utf-8')
+        jsonObj = json.loads(data)
+        price = jsonObj['last']
+        return price
+    elif exchange=='bittrex':
+        price = None
+        data = data.decode('utf-8')
+        jsonObj = json.loads(data)
+        price = jsonObj['result']['Last']
+        return price
+    elif exchange=='cex.io':
+        price = None
+        data = data.decode('utf-8')
+        jsonObj = json.loads(data)
+        price = jsonObj['last']
+        return price
 
 # Stores a prices with the exchange and currency pair information
 # exchange  and cur_pair must be a valid string from the database
