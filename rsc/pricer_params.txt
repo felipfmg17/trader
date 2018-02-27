@@ -1,4 +1,4 @@
-13
+22
 api.bitso.com /v3/ticker/?book=xrp_mxn bitso xrp_mxn
 api.bitso.com /v3/ticker/?book=btc_mxn bitso btc_mxn
 api.bitso.com /v3/ticker/?book=eth_mxn bitso eth_mxn
@@ -8,7 +8,16 @@ api.bitfinex.com /v1/pubticker/btcusd bitfinex btc_usd
 api.bitfinex.com /v1/pubticker/ethusd bitfinex eth_usd
 api.bitfinex.com /v1/pubticker/ltcusd bitfinex ltc_usd
 api.bitfinex.com /v1/pubticker/bchusd bitfinex bch_usd
+api.bitfinex.com /v1/pubticker/iotusd bitfinex iot_usd
 api.hitbtc.com /api/2/public/ticker/XRPUSDT hitbtc xrp_usd
 www.bitstamp.net /api/v2/ticker/xrpusd bitstamp xrp_usd
+www.bitstamp.net /api/v2/ticker/btcusd bitstamp btc_usd
+www.bitstamp.net /api/v2/ticker/ethusd bitstamp eth_usd
+www.bitstamp.net /api/v2/ticker/ltcusd bitstamp ltc_usd
 bittrex.com /api/v1.1/public/getticker?market=USDT-XRP bittrex xrp_usd
+bittrex.com /api/v1.1/public/getticker?market=USDT-BTC bittrex btc_usd
+bittrex.com /api/v1.1/public/getticker?market=USDT-ETH bittrex eth_usd
+bittrex.com /api/v1.1/public/getticker?market=USDT-LTC bittrex ltc_usd
 cex.io /api/ticker/XRP/USD cex.io xrp_usd
+cex.io /api/ticker/BTC/USD cex.io btc_usd
+cex.io /api/ticker/ETH/USD cex.io eth_usd
