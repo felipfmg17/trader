@@ -20,6 +20,13 @@ WHERE c.name = 'bitso'
 AND b.name = 'xrp_mxn';
 
 
+DELETE FROM coin_price 
+WHERE exists
+( 	SELECT * FROM  currency_pair 
+	WHERE coin_price.currency_pair_id=currency_pair.id
+	AND currency_pair.name = 'poe_btc' );
+
+
 
 select count(*) from coin_price;
 
@@ -40,8 +47,8 @@ JOIN currency_pair as b
 ON a.currency_pair_id = b.id
 JOIN exchange as c
 ON a.exchange_id = c.id
-WHERE c.name = 'bitfinex'
-AND b.name = 'xrp_usd';
+WHERE c.name = 'binance'
+AND b.name = 'poe_btc';
 
 
 SELECT * FROM (
