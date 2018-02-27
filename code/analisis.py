@@ -16,6 +16,13 @@ class EMA:
 		self.s = v if s==None else a*v + (1-a)*s
 		return round(self.s,3)
 
+def calcEMA(vals,a):
+    series = [vals[0]]
+    for i in range(1,len(vals)):
+        s = series[-1]*(1-a) + vals[i]*a
+        series.append(s)
+    return series
+
 # Ratio using Red Black Tree
 # returns 1: buy, 0: do nothing, -1: sells
 class Ratio:

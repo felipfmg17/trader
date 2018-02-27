@@ -3,6 +3,7 @@ from pricer import downloadResource,extractPrice
 import time
 import queue
 import threading
+import pymysql
 
 
 def fetchprice(exchange, host, resource, q):
@@ -13,13 +14,36 @@ def fetchprice(exchange, host, resource, q):
 		q.put(float(price))
 		time.sleep(60)
 
+def getprices(n,exchange,cur_pair):
+	db = pymysql.connect('localhost','root','root','pricer')
+	sql = """ SELECT Price  FROM (
+	SELECT * FROM (
+	SELECT  a.price as Price, a.date_time_sec as Seconds
+	FROM coin_price as a
+	JOIN currency_pair as b
+	ON a.currency_pair_id = b.id
+	JOIN exchange as c
+	ON a.exchange_id = c.id
+	WHERE c.name = \"{}\"
+	AND b.name = \"{}\"
+	ORDER BY a.date_time_sec DESC
+	LIMIT {} ) sub
+	ORDER BY Seconds ASC) sub2 """.format(exchange,cur_pair,n)
+	cursor = db.cursor()
+	cursor.execute(sql)
+	lines = cursor.fetchall()
+	prices = [ e[0] for e in lines ]
+	return prices;
 
 def trade():
 
+	gen = [0.00852, 991, 0.03177]
+	aph,tm,ptg = gen
+	ema = EMA(aph)
+	dev = None
 
-	pcs = None
-	ema = EMA(aph):
-	dev = Ratio(pcs,ptg)
+	#pcs = getprices(gen[1],'bitfinex','xrp_usd')
+	#dev = Ratio(pcs,gen[2])
 
 
 	# start fetching threads with queue prices
@@ -42,20 +66,26 @@ def trade():
 		th.start()
 
 	while True:
-		n = q.qsize()
-		s = 0
+		n,p = q.qsize(),0
 		if n>0:
 			for i in range(n):
 				e = q.get()
-				s += e
-			s /= n
-		d = dev.next( ema.next(s) )
-		sendsignal(d, dst):
-
+				p += e
+			p /= n
+		if dev==None:
+			dev = Ratio([p]*tm, ptg)
+		d = dev.next( ema.next(p) )
+		print(d,p)
 		time.sleep(60)
 
 
-if __name__ == '__main__':
-    trade()
+def test():
+	trade()
 
+def test2():
+	ar = getprices(10,'bitfinex','xrp_usd')
+	print(ar)
+
+if __name__ == '__main__':
+	test()
 
