@@ -58,8 +58,7 @@ insert into price_type(name) values("last");
 
 insert into exchange(name) values ("bitso"),("bitfinex"), ("binance"), ("poloniex"), ("hitbtc"), ("cex.io");
 
-
-
+insert into exchange(name) values ("bitstamp"), ("bittrex");
 
 
 

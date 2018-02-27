@@ -158,7 +158,7 @@ def measureerrs(ers):
 # The price is extracted from the json file using 'extractor' function
 # The loop wait for some seconds specified in 'pause'
 # exchange and cur_pair must be exact values from the database
-def startDownload(host,resource,exchange,cur_pair,pause,db,ers):
+def startDownload(host,resource,exchange,cur_pair,db,ers):
     while True:
         try:
             data = downloadResource(host, resource)
@@ -169,7 +169,7 @@ def startDownload(host,resource,exchange,cur_pair,pause,db,ers):
             ers.setmsg(host+resource)
             print(threading.current_thread().name, 'Error', host+resource )
             logging.exception(err)
-        time.sleep(pause)
+        time.sleep(60)
 
 # runs  'startDownload()'  for multiple currency pairs
 # it ask for the database connection and the number of resources you want to download
@@ -177,21 +177,15 @@ def startDownload(host,resource,exchange,cur_pair,pause,db,ers):
 def startMultiDownload():
     nums_requests = int(input())  # amount of resources
     ers = ErrorState()
-    ths = []
     th = threading.Thread(target=measureerrs, args=[ers] )
     th.start()
-    ths.append(th)
     time.sleep(1)
     for i in range(nums_requests):
         db = pymysql.connect('localhost','root','root','pricer')
         req = input().split() # host resource exchange currencypair pause
-        req[4] = int(req[4])
         req = req + [db,ers]
-        th = threading.Thread(target=startDownload, args=req )
-        th.start()
-        ths.append(th)
-    for th in ths:
-        th.join()
+        threading.Thread(target=startDownload, args=req ).start()
+    th.join()
 
 if __name__ == '__main__':
     startMultiDownload()

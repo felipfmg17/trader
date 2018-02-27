@@ -6,7 +6,8 @@ import threading
 import pymysql
 import socket
 
-
+# download the price from a exchange every 60 seconds
+# the price is pushed in to q
 def fetchprice(exchange, host, resource, q):
 	while True:
 		data = downloadResource(host, resource)
@@ -15,27 +16,8 @@ def fetchprice(exchange, host, resource, q):
 		q.put(float(price))
 		time.sleep(60)
 
-def lastnprices(n, exchange, cur_pair):
-	db = pymysql.connect('localhost','root','root','pricer')
-	sql = """ SELECT Price  FROM (
-	SELECT * FROM (
-	SELECT  a.price as Price, a.date_time_sec as Seconds
-	FROM coin_price as a
-	JOIN currency_pair as b
-	ON a.currency_pair_id = b.id
-	JOIN exchange as c
-	ON a.exchange_id = c.id
-	WHERE c.name = \"{}\"
-	AND b.name = \"{}\"
-	ORDER BY a.date_time_sec DESC
-	LIMIT {} ) sub
-	ORDER BY Seconds ASC) sub2 """.format(exchange,cur_pair,n)
-	cursor = db.cursor()
-	cursor.execute(sql)
-	lines = cursor.fetchall()
-	prices = [ e[0] for e in lines ]
-	return prices;
-
+# sends a datagram with a signa indicating either buy or sell
+# dst is a list with ip,port pairs
 def sendsignal(sgn, dst):
 	soc = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 	msg = bytes(str(sgn),'utf-8')
@@ -43,29 +25,12 @@ def sendsignal(sgn, dst):
 		soc.sendto(msg,adr)
 	soc.close()
 
-
-def trade(aph,ema,dev,rsc,dst):
-
-	gen = [0.00852, 991, 0.03177]
-	aph,tm,ptg = gen
-	ema = EMA(aph)
-	dev = None
-
-	rsc = []
-	rsc.append(['bitfinex', 'api.bitfinex.com','/v1/pubticker/xrpusd'])
-	rsc.append(['hitbtc','api.hitbtc.com','/api/2/public/ticker/XRPUSDT'])
-	rsc.append(['bitstamp','www.bitstamp.net','/api/v2/ticker/xrpusd'])
-	rsc.append(['bittrex','bittrex.com','/api/v1.1/public/getticker?market=USDT-XRP'])
-	rsc.append(['cex.io','cex.io','/api/ticker/XRP/USD'])
-
-	dst = []
-	dst.append(('localhost',10000))
-
-	q = queue.Queue()
+# start a bot for trading
+def trade(aph,tm,ptg,rsc,dst):
+	ema,dev,q = EMA(aph),None,queue.Queue()
 	for r in rsc:
 		r.append(q)
-		th = threading.Thread(target=fetchprice, args=r)
-		th.start()
+		threading.Thread(target=fetchprice, args=r).start()
 	time.sleep(10)
 	while True:
 		n,p = q.qsize(),0
@@ -79,8 +44,7 @@ def trade(aph,ema,dev,rsc,dst):
 		if dev!=None:
 			d = dev.next( ema.next(p) )
 			print(d,p)
-			th = threading.Thread(target=sendsignal, args=(d,dst) )
-			th.start()
+			threading.Thread(target=sendsignal, args=(d,dst) ).start()
 		time.sleep(60)
 
 
@@ -93,14 +57,13 @@ def test():
 	rsc = []
 	for i in range(nrsc):
 		rsc.append(input().split())
-	ndst = int(input()):
+	ndst = int(input())
 	dst = []
 	for i in range(ndst):
-		dst.append(tuple(input().split()))
-
-
-
-	trade()
+		adr = input().split()
+		adr[1] = int(adr[1])
+		dst.append( tuple(adr) )
+	trade(aph,tm,ptg,rsc,dst)
 
 if __name__ == '__main__':
 	test()

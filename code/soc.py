@@ -31,7 +31,6 @@ def listen():
 		data, cli = soc.recvfrom(4096)
 		sgn = str(data,'utf-8')
 		print('message received:',cli,sgn)
-		print(type(cli[0]),cli[0])
 
 
 

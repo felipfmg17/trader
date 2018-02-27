@@ -134,6 +134,27 @@ class Priceman:
             return self.pcs[ ini: ]
         return self.pcs[ ini : ini+s ]
 
+    def lastnprices(self, n, exchange, cur_pair):
+        db = pymysql.connect('localhost','root','root','pricer')
+        sql = """ SELECT Price  FROM (
+        SELECT * FROM (
+        SELECT  a.price as Price, a.date_time_sec as Seconds
+        FROM coin_price as a
+        JOIN currency_pair as b
+        ON a.currency_pair_id = b.id
+        JOIN exchange as c
+        ON a.exchange_id = c.id
+        WHERE c.name = \"{}\"
+        AND b.name = \"{}\"
+        ORDER BY a.date_time_sec DESC
+        LIMIT {} ) sub
+        ORDER BY Seconds ASC) sub2 """.format(exchange,cur_pair,n)
+        cursor = db.cursor()
+        cursor.execute(sql)
+        lines = cursor.fetchall()
+        prices = [ e[0] for e in lines ]
+        return prices;
+
     # load prices from database from date d0
     # to d1, dates are given in secons from epoch
     def loadPrices(self,d0,d1):
@@ -397,8 +418,6 @@ def test5():
     fout = open('perfs.txt','w')
     fout.write(s)
     fout.close()
-
-
 
 def test():
     d0, d1 = 1517103819, 1519516817

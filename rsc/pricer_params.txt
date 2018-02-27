@@ -1,109 +1,14 @@
-108
-api.bitso.com /v3/ticker/?book=xrp_mxn bitso xrp_mxn 60
-api.bitso.com /v3/ticker/?book=btc_mxn bitso btc_mxn 60
-api.bitso.com /v3/ticker/?book=eth_mxn bitso eth_mxn 60
-api.bitso.com /v3/ticker/?book=ltc_mxn bitso ltc_mxn 60
-api.bitfinex.com /v1/pubticker/xrpusd bitfinex xrp_usd 60
-api.bitfinex.com /v1/pubticker/btcusd bitfinex btc_usd 60
-api.bitfinex.com /v1/pubticker/ethusd bitfinex eth_usd 60
-api.bitfinex.com /v1/pubticker/ltcusd bitfinex ltc_usd 60
-api.bitfinex.com /v1/pubticker/bchusd bitfinex bch_usd 60
-api.binance.com /api/v1/ticker/24hr?symbol=ETHBTC binance eth_btc 60
-api.binance.com /api/v1/ticker/24hr?symbol=LTCBTC binance ltc_btc 60
-api.binance.com /api/v1/ticker/24hr?symbol=BNBBTC binance bnb_btc 60
-api.binance.com /api/v1/ticker/24hr?symbol=NEOBTC binance neo_btc 60
-api.binance.com /api/v1/ticker/24hr?symbol=BCCBTC binance bcc_btc 60
-api.binance.com /api/v1/ticker/24hr?symbol=GASBTC binance gas_btc 60
-api.binance.com /api/v1/ticker/24hr?symbol=HSRBTC binance hsr_btc 60
-api.binance.com /api/v1/ticker/24hr?symbol=MCOBTC binance mco_btc 60
-api.binance.com /api/v1/ticker/24hr?symbol=WTCBTC binance wtc_btc 60
-api.binance.com /api/v1/ticker/24hr?symbol=LRCBTC binance lrc_btc 60
-api.binance.com /api/v1/ticker/24hr?symbol=QTUMBTC binance qtum_btc 60
-api.binance.com /api/v1/ticker/24hr?symbol=YOYOBTC binance yoyo_btc 60
-api.binance.com /api/v1/ticker/24hr?symbol=OMGBTC binance omg_btc 60
-api.binance.com /api/v1/ticker/24hr?symbol=ZRXBTC binance zrx_btc 60
-api.binance.com /api/v1/ticker/24hr?symbol=STRATBTC binance strat_btc 60
-api.binance.com /api/v1/ticker/24hr?symbol=SNGLSBTC binance sngls_btc 60
-api.binance.com /api/v1/ticker/24hr?symbol=BQXBTC binance bqx_btc 60
-api.binance.com /api/v1/ticker/24hr?symbol=KNCBTC binance knc_btc 60
-api.binance.com /api/v1/ticker/24hr?symbol=FUNBTC binance fun_btc 60
-api.binance.com /api/v1/ticker/24hr?symbol=SNMBTC binance snm_btc 60
-api.binance.com /api/v1/ticker/24hr?symbol=IOTABTC binance iota_btc 60
-api.binance.com /api/v1/ticker/24hr?symbol=LINKBTC binance link_btc 60
-api.binance.com /api/v1/ticker/24hr?symbol=XVGBTC binance xvg_btc 60
-api.binance.com /api/v1/ticker/24hr?symbol=CTRBTC binance ctr_btc 60
-api.binance.com /api/v1/ticker/24hr?symbol=SALTBTC binance salt_btc 60
-api.binance.com /api/v1/ticker/24hr?symbol=MDABTC binance mda_btc 60
-api.binance.com /api/v1/ticker/24hr?symbol=MTLBTC binance mtl_btc 60
-api.binance.com /api/v1/ticker/24hr?symbol=SUBBTC binance sub_btc 60
-api.binance.com /api/v1/ticker/24hr?symbol=EOSBTC binance eos_btc 60
-api.binance.com /api/v1/ticker/24hr?symbol=SNTBTC binance snt_btc 60
-api.binance.com /api/v1/ticker/24hr?symbol=ETCBTC binance etc_btc 60
-api.binance.com /api/v1/ticker/24hr?symbol=MTHBTC binance mth_btc 60
-api.binance.com /api/v1/ticker/24hr?symbol=ENGBTC binance eng_btc 60
-api.binance.com /api/v1/ticker/24hr?symbol=DNTBTC binance dnt_btc 60
-api.binance.com /api/v1/ticker/24hr?symbol=ZECBTC binance zec_btc 60
-api.binance.com /api/v1/ticker/24hr?symbol=BNTBTC binance bnt_btc 60
-api.binance.com /api/v1/ticker/24hr?symbol=ASTBTC binance ast_btc 60
-api.binance.com /api/v1/ticker/24hr?symbol=DASHBTC binance dash_btc 60
-api.binance.com /api/v1/ticker/24hr?symbol=OAXBTC binance oax_btc 60
-api.binance.com /api/v1/ticker/24hr?symbol=ICNBTC binance icn_btc 60
-api.binance.com /api/v1/ticker/24hr?symbol=BTGBTC binance btg_btc 60
-api.binance.com /api/v1/ticker/24hr?symbol=EVXBTC binance evx_btc 60
-api.binance.com /api/v1/ticker/24hr?symbol=REQBTC binance req_btc 60
-api.binance.com /api/v1/ticker/24hr?symbol=VIBBTC binance vib_btc 60
-api.binance.com /api/v1/ticker/24hr?symbol=TRXBTC binance trx_btc 60
-api.binance.com /api/v1/ticker/24hr?symbol=POWRBTC binance powr_btc 60
-api.binance.com /api/v1/ticker/24hr?symbol=ARKBTC binance ark_btc 60
-api.binance.com /api/v1/ticker/24hr?symbol=XRPBTC binance xrp_btc 60
-api.binance.com /api/v1/ticker/24hr?symbol=MODBTC binance mod_btc 60
-api.binance.com /api/v1/ticker/24hr?symbol=ENJBTC binance enj_btc 60
-api.binance.com /api/v1/ticker/24hr?symbol=STORJBTC binance storj_btc 60
-api.binance.com /api/v1/ticker/24hr?symbol=VENBTC binance ven_btc 60
-api.binance.com /api/v1/ticker/24hr?symbol=KMDBTC binance kmd_btc 60
-api.binance.com /api/v1/ticker/24hr?symbol=RCNBTC binance rcn_btc 60
-api.binance.com /api/v1/ticker/24hr?symbol=NULSBTC binance nuls_btc 60
-api.binance.com /api/v1/ticker/24hr?symbol=RDNBTC binance rdn_btc 60
-api.binance.com /api/v1/ticker/24hr?symbol=XMRBTC binance xmr_btc 60
-api.binance.com /api/v1/ticker/24hr?symbol=DLTBTC binance dlt_btc 60
-api.binance.com /api/v1/ticker/24hr?symbol=AMBBTC binance amb_btc 60
-api.binance.com /api/v1/ticker/24hr?symbol=BATBTC binance bat_btc 60
-api.binance.com /api/v1/ticker/24hr?symbol=BCPTBTC binance bcpt_btc 60
-api.binance.com /api/v1/ticker/24hr?symbol=ARNBTC binance arn_btc 60
-api.binance.com /api/v1/ticker/24hr?symbol=GVTBTC binance gvt_btc 60
-api.binance.com /api/v1/ticker/24hr?symbol=CDTBTC binance cdt_btc 60
-api.binance.com /api/v1/ticker/24hr?symbol=GXSBTC binance gxs_btc 60
-api.binance.com /api/v1/ticker/24hr?symbol=POEBTC binance poe_btc 60
-api.binance.com /api/v1/ticker/24hr?symbol=QSPBTC binance qsp_btc 60
-api.binance.com /api/v1/ticker/24hr?symbol=BTSBTC binance bts_btc 60
-api.binance.com /api/v1/ticker/24hr?symbol=XZCBTC binance xzc_btc 60
-api.binance.com /api/v1/ticker/24hr?symbol=LSKBTC binance lsk_btc 60
-api.binance.com /api/v1/ticker/24hr?symbol=TNTBTC binance tnt_btc 60
-api.binance.com /api/v1/ticker/24hr?symbol=FUELBTC binance fuel_btc 60
-api.binance.com /api/v1/ticker/24hr?symbol=MANABTC binance mana_btc 60
-api.binance.com /api/v1/ticker/24hr?symbol=BCDBTC binance bcd_btc 60
-api.binance.com /api/v1/ticker/24hr?symbol=DGDBTC binance dgd_btc 60
-api.binance.com /api/v1/ticker/24hr?symbol=ADXBTC binance adx_btc 60
-api.binance.com /api/v1/ticker/24hr?symbol=ADABTC binance ada_btc 60
-api.binance.com /api/v1/ticker/24hr?symbol=PPTBTC binance ppt_btc 60
-api.binance.com /api/v1/ticker/24hr?symbol=CMTBTC binance cmt_btc 60
-api.binance.com /api/v1/ticker/24hr?symbol=XLMBTC binance xlm_btc 60
-api.binance.com /api/v1/ticker/24hr?symbol=CNDBTC binance cnd_btc 60
-api.binance.com /api/v1/ticker/24hr?symbol=LENDBTC binance lend_btc 60
-api.binance.com /api/v1/ticker/24hr?symbol=WABIBTC binance wabi_btc 60
-api.binance.com /api/v1/ticker/24hr?symbol=TNBBTC binance tnb_btc 60
-api.binance.com /api/v1/ticker/24hr?symbol=WAVESBTC binance waves_btc 60
-api.binance.com /api/v1/ticker/24hr?symbol=GTOBTC binance gto_btc 60
-api.binance.com /api/v1/ticker/24hr?symbol=ICXBTC binance icx_btc 60
-api.binance.com /api/v1/ticker/24hr?symbol=OSTBTC binance ost_btc 60
-api.binance.com /api/v1/ticker/24hr?symbol=ELFBTC binance elf_btc 60
-api.binance.com /api/v1/ticker/24hr?symbol=AIONBTC binance aion_btc 60
-api.binance.com /api/v1/ticker/24hr?symbol=NEBLBTC binance nebl_btc 60
-api.binance.com /api/v1/ticker/24hr?symbol=BRDBTC binance brd_btc 60
-api.binance.com /api/v1/ticker/24hr?symbol=EDOBTC binance edo_btc 60
-api.binance.com /api/v1/ticker/24hr?symbol=WINGSBTC binance wings_btc 60
-api.binance.com /api/v1/ticker/24hr?symbol=NAVBTC binance nav_btc 60
-api.binance.com /api/v1/ticker/24hr?symbol=LUNBTC binance lun_btc 60
-api.binance.com /api/v1/ticker/24hr?symbol=TRIGBTC binance trig_btc 60
-api.binance.com /api/v1/ticker/24hr?symbol=APPCBTC binance appc_btc 60
-api.binance.com /api/v1/ticker/24hr?symbol=VIBEBTC binance vibe_btc 60
+13
+api.bitso.com /v3/ticker/?book=xrp_mxn bitso xrp_mxn
+api.bitso.com /v3/ticker/?book=btc_mxn bitso btc_mxn
+api.bitso.com /v3/ticker/?book=eth_mxn bitso eth_mxn
+api.bitso.com /v3/ticker/?book=ltc_mxn bitso ltc_mxn
+api.bitfinex.com /v1/pubticker/xrpusd bitfinex xrp_usd
+api.bitfinex.com /v1/pubticker/btcusd bitfinex btc_usd
+api.bitfinex.com /v1/pubticker/ethusd bitfinex eth_usd
+api.bitfinex.com /v1/pubticker/ltcusd bitfinex ltc_usd
+api.bitfinex.com /v1/pubticker/bchusd bitfinex bch_usd
+api.hitbtc.com /api/2/public/ticker/XRPUSDT hitbtc xrp_usd
+www.bitstamp.net /api/v2/ticker/xrpusd bitstamp xrp_usd
+bittrex.com /api/v1.1/public/getticker?market=USDT-XRP bittrex xrp_usd
+cex.io /api/ticker/XRP/USD cex.io xrp_usd
