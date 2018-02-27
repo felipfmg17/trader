@@ -4,6 +4,7 @@ import time
 import queue
 import threading
 import pymysql
+import socket
 
 
 def fetchprice(exchange, host, resource, q):
@@ -14,7 +15,7 @@ def fetchprice(exchange, host, resource, q):
 		q.put(float(price))
 		time.sleep(60)
 
-def getprices(n,exchange,cur_pair):
+def lastnprices(n, exchange, cur_pair):
 	db = pymysql.connect('localhost','root','root','pricer')
 	sql = """ SELECT Price  FROM (
 	SELECT * FROM (
@@ -35,18 +36,20 @@ def getprices(n,exchange,cur_pair):
 	prices = [ e[0] for e in lines ]
 	return prices;
 
-def trade():
+def sendsignal(sgn, dst):
+	soc = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+	msg = bytes(str(sgn),'utf-8')
+	for adr in dst:
+		soc.sendto(msg,adr)
+	soc.close()
+
+
+def trade(aph,ema,dev,rsc,dst):
 
 	gen = [0.00852, 991, 0.03177]
 	aph,tm,ptg = gen
 	ema = EMA(aph)
 	dev = None
-
-	#pcs = getprices(gen[1],'bitfinex','xrp_usd')
-	#dev = Ratio(pcs,gen[2])
-
-
-	# start fetching threads with queue prices
 
 	rsc = []
 	rsc.append(['bitfinex', 'api.bitfinex.com','/v1/pubticker/xrpusd'])
@@ -56,15 +59,14 @@ def trade():
 	rsc.append(['cex.io','cex.io','/api/ticker/XRP/USD'])
 
 	dst = []
-	dst.append(['localhost',50502])
-	dst.append(['localhost',50503])
+	dst.append(('localhost',10000))
 
 	q = queue.Queue()
 	for r in rsc:
 		r.append(q)
 		th = threading.Thread(target=fetchprice, args=r)
 		th.start()
-
+	time.sleep(10)
 	while True:
 		n,p = q.qsize(),0
 		if n>0:
@@ -72,19 +74,33 @@ def trade():
 				e = q.get()
 				p += e
 			p /= n
-		if dev==None:
+		if dev==None and p>0:
 			dev = Ratio([p]*tm, ptg)
-		d = dev.next( ema.next(p) )
-		print(d,p)
+		if dev!=None:
+			d = dev.next( ema.next(p) )
+			print(d,p)
+			th = threading.Thread(target=sendsignal, args=(d,dst) )
+			th.start()
 		time.sleep(60)
 
 
 def test():
-	trade()
+	gen = input().split()
+	aph = float(gen[0])
+	tm = int(gen[1])
+	ptg = float(gen[2])
+	nrsc = int(input())
+	rsc = []
+	for i in range(nrsc):
+		rsc.append(input().split())
+	ndst = int(input()):
+	dst = []
+	for i in range(ndst):
+		dst.append(tuple(input().split()))
 
-def test2():
-	ar = getprices(10,'bitfinex','xrp_usd')
-	print(ar)
+
+
+	trade()
 
 if __name__ == '__main__':
 	test()
