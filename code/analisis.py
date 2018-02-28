@@ -2,6 +2,10 @@ import math
 import random
 import time
 import pymysql
+import threading
+import pickle
+import socket
+import queue
 import matplotlib.pyplot as plt
 import heapq as hp
 from red_black_dict_mod import RedBlackTree
@@ -330,6 +334,52 @@ def getadj(spc, i, val, evm):
         if ngn>gn:
             nspc = (-ngn, tuple(ngen))
     return nspc
+
+def getadjs(spc, vis, evm):
+    adjs = []
+    for in range(len(spc[1])):
+        tbl = evm['mtt'][i]
+        for val in tbl:
+            nspc = None
+            gen = spc[1]
+            ngen = list(gen)
+            ngen[i] = round(ngen[i]+val,evm['rds'][i])
+            lms = evm['lms']
+            if ngen[i]>=lms[i][0] and ngen[i]<=lms[i][1] and ngen not in vis:
+                adjs.append(ngen)
+    return adjs
+
+
+def sendslice(spc,slc,soc,q):
+    pack = (spc,slc)
+    bpack = pickle.dumps(pack)
+    soc.send(bpack)
+    bpack, addr = soc.recv(4096)
+    nspcs = pickle.loads(bpack)
+    q.put(nscps)
+
+def dfs(spc,vis,st,psm,wks,evm):
+    adjs = getadjs(spc,vis,evm)
+    wn = len(wks)
+    sn = len(adjs)//wn #slice size
+    ths = []
+    q = queue.Queue()
+    for i in range(wn):
+        slc = adjs[i*sn:] if i==wn-1 else adjs[i*sn:i*sn+sn]
+        th = threading.Thread( target=sendslice, args=(spc,slc,wks[i],q) )
+        th.start()
+        ths.append(th)
+    for th in ths:
+        th.join()
+    nspcs = []
+    while q.qsize()>0:
+        nspcs.extend(q.get())
+    for nspc in nspcs:
+        hp.heappush(st,nspc)
+        vis.add(nspc[1])
+    if len(nspcs)==0:
+        psm[ spc[0] ] = spc[1]
+
 
 # Given a specimen u, generates all
 # adjacent possible specimes

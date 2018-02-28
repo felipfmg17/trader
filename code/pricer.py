@@ -127,24 +127,24 @@ class ErrorState:
         self.bkt = {}
 
     def setmsg(self,msg):
-        if self.lk.acquire():
-            if msg not in self.bkt:
-                self.bkt[msg] = 0
-            self.bkt[msg] += 1
-            self.lk.release()
+        self.lk.acquire():
+        if msg not in self.bkt:
+            self.bkt[msg] = 0
+        self.bkt[msg] += 1
+        self.lk.release()
 
     def getmsg(self):
         msg = ''
-        if self.lk.acquire():
-            for u,v in self.bkt.items():
-                msg += u + ' ' + str(v) +'\n'
-            self.lk.release()
+        self.lk.acquire():
+        for u,v in self.bkt.items():
+            msg += u + ' ' + str(v) +'\n'
+        self.lk.release()
         return msg
 
     def reset(self):
-        if self.lk.acquire():
-            self.bkt = {}
-            self.lk.release()
+        self.lk.acquire():
+        self.bkt = {}
+        self.lk.release()
 
 def measureerrs(ers):
     while True:
@@ -182,8 +182,7 @@ def startMultiDownload():
     time.sleep(1)
     for i in range(nums_requests):
         db = pymysql.connect('localhost','root','root','pricer')
-        req = input().split() # host resource exchange currencypair pause
-        req = req + [db,ers]
+        req = input().split() + [db,ers] # host resource exchange currencypair pause
         threading.Thread(target=startDownload, args=req ).start()
     th.join()
 
