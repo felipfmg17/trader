@@ -5,6 +5,7 @@ import queue
 import threading
 import pymysql
 import socket
+import pickle
 
 # download the price from a exchange every 60 seconds
 # the price is pushed in to q
@@ -20,9 +21,8 @@ def fetchprice(exchange, host, resource, q):
 # dst is a list with ip,port pairs
 def sendsignal(sgn, dst):
 	soc = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-	msg = bytes(str(sgn),'utf-8')
 	for adr in dst:
-		soc.sendto(msg,adr)
+		soc.sendto(pickle.dumps(sgn), adr)
 	soc.close()
 
 # start a bot for trading

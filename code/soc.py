@@ -1,5 +1,6 @@
 import socket
 import sys
+import pickle
 
 
 def client():
@@ -29,7 +30,8 @@ def listen():
 	while True:
 		print('waiting')
 		data, cli = soc.recvfrom(4096)
-		sgn = str(data,'utf-8')
+		#sgn = str(data,'utf-8')
+		sgn = pickle.loads(data)
 		print('message received:',cli,sgn)
 
 
