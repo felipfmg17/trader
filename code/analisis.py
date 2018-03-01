@@ -7,6 +7,7 @@ import pickle
 import socket
 import queue
 import sys
+import play
 import matplotlib.pyplot as plt
 import heapq as hp
 from red_black_dict_mod import RedBlackTree
@@ -315,38 +316,41 @@ def born(evm):
     gn = fitness(gen,evm)
     return (-gn,tuple(gen))
 
-
 # Given a gen, calculates the percentage gain
 # during a buy an sell simulation
 def fitness(gen,evm):
     pms = evm['pcf'] + list(gen)
     return round( sim(*pms), evm['frd'] )
 
-def fitnessworker(adr):
-    ss = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+def evalgens(spc,ngens,evm):
+    gn,gen = -spc[0], spc[1]
+    nspcs = []
+    for ngen in ngens:
+        print('evaluating:',ngen)
+        ngn = fitness(ngen,evm)
+        if ngn>gn:
+            nspcs.append((-ngn,ngen))
+    return nspcs
+
+def evalworker(adr):
+    ss = socket.socket()
     ss.bind(adr)
     ss.listen(1)
     while True:
-        print('Waiting for connection...')
-        soc, cli = ss.accept()
-        bevm = soc.recv(4096)
-        print(bevm)
-        evm = pickle.loads( bevm )
+        soc,cli = ss.accept()
+        evm = play.recv(soc)
+        print('evm received')
         while True:
-            print('waiting spcs...')
-            pack = pickle.loads( soc.recv(4096) )
-            print(pack)
+            print('waiting nspcs...')
+            pack = play.recv(soc)
+            print('pack received')
             if pack=='end':
                 break
-            spc,slc = pack
-            gn, gen = -spc[0], spc[1]
-            nspcs = []
-            for ngen in slc:
-                ngn = fitness(ngen,evm)
-                if ngn>gn:
-                    nspcs.append((-ngn,ngen))
-            soc.send( pickle.dumps(nscps) )
-
+            spc,ngens = pack
+            print('ngens received:',len(ngens))
+            nscps = evalgens(spc,ngens,evm)
+            play.send(soc,nscps)
+            print('nscps sent back')
 
 def getadjs(spc, vis, evm):
     adjs = []
@@ -366,11 +370,9 @@ def getadjs(spc, vis, evm):
 
 def sendslice(spc,slc,soc,q):
     pack = (spc,slc)
-    bpack = pickle.dumps(pack)
-    soc.send(bpack)
-    bpack, addr = soc.recv(4096)
-    nspcs = pickle.loads(bpack)
-    q.put(nscps)
+    play.send(soc,pack)
+    nspcs = play.recv(soc)
+    q.put(nspcs)
 
 
 
@@ -380,42 +382,51 @@ def sendslice(spc,slc,soc,q):
 # vis is a set of gens
 def perfect(spc, adrs, evm):
     print('perfecting')
+    # Creating sockets for workers
     socs = []
-    for  adr in adrs:
-        soc = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    for adr in adrs:
+        soc = socket.socket()
         soc.connect(adr)
-        soc = soc.
-        print('sending evm')
-        soc.send( pickle.dumps(evm) )
         socs.append(soc)
+    # Sending environment to workers
+    print('sending evm')
+    for soc in socs:
+        play.send(soc,evm)
+    # Defining objects for the dfs
     st, psm, vis, rps = [], {}, set(), 15
     hp.heappush(st, spc)
     vis.add(spc[1])
     while len(st)>0 and len(psm)<3 and rps>0:
+        print('psm, rps',len(psm),rps)
+        # Getting adjacent elements
         spc = hp.heappop(st)
         adjs = getadjs(spc,vis,evm)
+        print('adjs:',len(adjs))
+        # Dividing adjacent specimens into slices
         sn = len(socs)
         slcs = [ [] for i in range(sn) ]
         for i in range(len(adjs)):
             slcs[i%sn].append(adjs[i])
         ths,q = [],queue.Queue()
+        # Sending slices to workers and waiting them to finish
         for i in range(sn):
             print('sending slice')
-            th = threading.Thread( target=sendslice, args=(spc,slcs[i],socs[i],q) )
-            th.start()
-            ths.append(th)
+            ths.append( play.mkthread(sendslice, (spc,slcs[i],socs[i],q)) )
         for th in ths:
             th.join()
-        nspcs = []
+        # Gathering the result from the workers
         print('gathering slices')
+        nspcs = []
         while q.qsize()>0:
             nspcs.extend(q.get())
+        # Analizing the results
         for nspc in nspcs:
             hp.heappush(st,nspc)
             vis.add(nspc[1])
         if len(nspcs)==0:
             psm[ spc[0] ] = spc[1]
         rps -= 1
+    play.send(soc,'end')
     return psm
 
 # pps : population
@@ -424,7 +435,7 @@ def populate(evm):
     pps = {}
     for i in range(5):
         spc = born(evm)
-        psm = perfect(spc,[('localhost',50000)],evm)
+        psm = perfect(spc,[('localhost',50001),('localhost',50002)],evm)
         pps.update(psm)
     return pps
 
@@ -483,8 +494,8 @@ def test():
 
 
 if __name__ == '__main__':
-    if sys.argv[1]=='1':
-        fitnessworker(('localhost',50000))
-    else:
+    if sys.argv[1]=='0':
         test5()
+    else:
+        evalworker(('localhost',int(sys.argv[1])))
 
