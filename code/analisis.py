@@ -321,19 +321,26 @@ def fitness(gen,evm):
     pms = evm['pcf'] + list(gen)
     return round( sim(*pms), evm['frd'] )
 
-# calculates adjacent specimens to spc
-# modifing the i property of spc with val
-def getadj(spc, i, val, evm):
-    nspc = None
-    gn, gen = -spc[0],spc[1]
-    ngen = list(gen)
-    ngen[i] = round(ngen[i]+val,evm['rds'][i])
-    lms = evm['lms']
-    if ngen[i]>=lms[i][0] and ngen[i]<=lms[i][1]:
-        ngn = fitness(ngen,evm)
-        if ngn>gn:
-            nspc = (-ngn, tuple(ngen))
-    return nspc
+def fitnessworker(adr):
+    ss = socket.socket(AF_INET, SOCK_STREAM)
+    ss.bind(adr)
+    s.listen(1)
+    while True:
+        soc, cli = ss.accept()
+        evm = pickle.loads( soc.recv(4096) )
+        while True:
+            pack = pickle.loads( soc.recv(4096) )
+            if pack=='end':
+                break
+            spc,slc = pack
+            gn, gen = -spc[0], spc[1]
+            nspcs = []
+            for ngen in slc:
+                ngn = fitness(ngen,evm)
+                if ngn>gn:
+                    nspcs.append((-ngn,ngen))
+            soc.send( pickle.dumps(nscps) )
+
 
 def getadjs(spc, vis, evm):
     adjs = []
@@ -358,61 +365,44 @@ def sendslice(spc,slc,soc,q):
     nspcs = pickle.loads(bpack)
     q.put(nscps)
 
-def dfs(spc,vis,st,psm,wks,evm):
-    adjs = getadjs(spc,vis,evm)
-    wn = len(wks)
-    sn = len(adjs)//wn #slice size
-    ths = []
-    q = queue.Queue()
-    for i in range(wn):
-        slc = adjs[i*sn:] if i==wn-1 else adjs[i*sn:i*sn+sn]
-        th = threading.Thread( target=sendslice, args=(spc,slc,wks[i],q) )
-        th.start()
-        ths.append(th)
-    for th in ths:
-        th.join()
-    nspcs = []
-    while q.qsize()>0:
-        nspcs.extend(q.get())
-    for nspc in nspcs:
-        hp.heappush(st,nspc)
-        vis.add(nspc[1])
-    if len(nspcs)==0:
-        psm[ spc[0] ] = spc[1]
 
-
-# Given a specimen u, generates all
-# adjacent possible specimes
-# vis is used to store visited specimes
-# st is a priority queue for the next
-# specimen to process
-# psm stores perfect specimens which cannot be
-# improved more
-def dfs(u,vis,st,psm,evm):
-    kds = False
-    for i in range(len(u[1])):
-        tbl = evm['mtt'][i]
-        for val in tbl:
-            v = getadj(u, i, val,evm)
-            if v!=None  and v[1] not in vis:
-                hp.heappush(st,v)
-                vis.add(v[1])
-                kds = True
-    if kds==False:
-        if u[0]<0:
-            psm[u[0]] = u[1]
-        #print('Perfect specimen:',u)
 
 # psm: perfect specimens
 # rps number of  repetitions of the while
-def perfect(spc,evm):
+# st for the priority queue
+# vis is a set of gens
+def perfect(spc, adrs, evm):
     print('perfecting')
+    socs = []
+    for  adr in adrs:
+        soc = socket.socket(AF_INET, SOCK_STREAM)
+        soc.connect(adrs)
+        soc.send( pickle.dumps(evm) )
+        socs.append(soc)
     st, psm, vis, rps = [], {}, set(), 15
     hp.heappush(st, spc)
     vis.add(spc[1])
     while len(st)>0 and len(psm)<3 and rps>0:
-        u = hp.heappop(st)
-        dfs(u, vis, st, psm, evm)
+        spc = hp.heappop(st)
+        adjs = getadjs(spc,vis,evm)
+        slcs, sn = [ [] for i in range(sn) ], len(socs)
+        for i in range(len(adjs)):
+            slcs[i%sn].append(adjs[i])
+        ths,q = [],queue.Queue()
+        for i in range(sn):
+            th = threading.Thread( target=sendslice, args=(spc,slcs[i],socs[i],q) )
+            th.start()
+            ths.append(th)
+        for th in ths:
+            th.join()
+        nspcs = []
+        while q.qsize()>0:
+            nspcs.extend(q.get())
+        for nspc in nspcs:
+            hp.heappush(st,nspc)
+            vis.add(nspc[1])
+        if len(nspcs)==0:
+            psm[ spc[0] ] = spc[1]
         rps -= 1
     return psm
 
