@@ -6,6 +6,7 @@ import threading
 import pickle
 import socket
 import queue
+import sys
 import matplotlib.pyplot as plt
 import heapq as hp
 from red_black_dict_mod import RedBlackTree
@@ -322,14 +323,19 @@ def fitness(gen,evm):
     return round( sim(*pms), evm['frd'] )
 
 def fitnessworker(adr):
-    ss = socket.socket(AF_INET, SOCK_STREAM)
+    ss = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     ss.bind(adr)
-    s.listen(1)
+    ss.listen(1)
     while True:
+        print('Waiting for connection...')
         soc, cli = ss.accept()
-        evm = pickle.loads( soc.recv(4096) )
+        bevm = soc.recv(4096)
+        print(bevm)
+        evm = pickle.loads( bevm )
         while True:
+            print('waiting spcs...')
             pack = pickle.loads( soc.recv(4096) )
+            print(pack)
             if pack=='end':
                 break
             spc,slc = pack
@@ -344,13 +350,14 @@ def fitnessworker(adr):
 
 def getadjs(spc, vis, evm):
     adjs = []
-    for in range(len(spc[1])):
+    for i in range(len(spc[1])):
         tbl = evm['mtt'][i]
         for val in tbl:
             nspc = None
             gen = spc[1]
             ngen = list(gen)
             ngen[i] = round(ngen[i]+val,evm['rds'][i])
+            ngen = tuple(ngen)
             lms = evm['lms']
             if ngen[i]>=lms[i][0] and ngen[i]<=lms[i][1] and ngen not in vis:
                 adjs.append(ngen)
@@ -375,8 +382,10 @@ def perfect(spc, adrs, evm):
     print('perfecting')
     socs = []
     for  adr in adrs:
-        soc = socket.socket(AF_INET, SOCK_STREAM)
-        soc.connect(adrs)
+        soc = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        soc.connect(adr)
+        soc = soc.
+        print('sending evm')
         soc.send( pickle.dumps(evm) )
         socs.append(soc)
     st, psm, vis, rps = [], {}, set(), 15
@@ -385,17 +394,20 @@ def perfect(spc, adrs, evm):
     while len(st)>0 and len(psm)<3 and rps>0:
         spc = hp.heappop(st)
         adjs = getadjs(spc,vis,evm)
-        slcs, sn = [ [] for i in range(sn) ], len(socs)
+        sn = len(socs)
+        slcs = [ [] for i in range(sn) ]
         for i in range(len(adjs)):
             slcs[i%sn].append(adjs[i])
         ths,q = [],queue.Queue()
         for i in range(sn):
+            print('sending slice')
             th = threading.Thread( target=sendslice, args=(spc,slcs[i],socs[i],q) )
             th.start()
             ths.append(th)
         for th in ths:
             th.join()
         nspcs = []
+        print('gathering slices')
         while q.qsize()>0:
             nspcs.extend(q.get())
         for nspc in nspcs:
@@ -412,7 +424,7 @@ def populate(evm):
     pps = {}
     for i in range(5):
         spc = born(evm)
-        psm = perfect(spc,evm)
+        psm = perfect(spc,[('localhost',50000)],evm)
         pps.update(psm)
     return pps
 
@@ -471,6 +483,8 @@ def test():
 
 
 if __name__ == '__main__':
-    test()
-
+    if sys.argv[1]=='1':
+        fitnessworker(('localhost',50000))
+    else:
+        test5()
 
