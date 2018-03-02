@@ -140,26 +140,7 @@ class Priceman:
             return self.pcs[ ini: ]
         return self.pcs[ ini : ini+s ]
 
-    def lastnprices(self, n, exchange, cur_pair):
-        db = pymysql.connect('localhost','root','root','pricer')
-        sql = """ SELECT Price  FROM (
-        SELECT * FROM (
-        SELECT  a.price as Price, a.date_time_sec as Seconds
-        FROM coin_price as a
-        JOIN currency_pair as b
-        ON a.currency_pair_id = b.id
-        JOIN exchange as c
-        ON a.exchange_id = c.id
-        WHERE c.name = \"{}\"
-        AND b.name = \"{}\"
-        ORDER BY a.date_time_sec DESC
-        LIMIT {} ) sub
-        ORDER BY Seconds ASC) sub2 """.format(exchange,cur_pair,n)
-        cursor = db.cursor()
-        cursor.execute(sql)
-        lines = cursor.fetchall()
-        prices = [ e[0] for e in lines ]
-        return prices;
+    
 
     # load prices from database from date d0
     # to d1, dates are given in secons from epoch
@@ -181,6 +162,27 @@ class Priceman:
         prices = [ e[0] for e in lines ]
         return prices;
 
+
+def lastnprices(n, exchange, cur_pair):
+    db = pymysql.connect('localhost','root','root','pricer')
+    sql = """ SELECT Price  FROM (
+    SELECT * FROM (
+    SELECT  a.price as Price, a.date_time_sec as Seconds
+    FROM coin_price as a
+    JOIN currency_pair as b
+    ON a.currency_pair_id = b.id
+    JOIN exchange as c
+    ON a.exchange_id = c.id
+    WHERE c.name = \"{}\"
+    AND b.name = \"{}\"
+    ORDER BY a.date_time_sec DESC
+    LIMIT {} ) sub
+    ORDER BY Seconds ASC) sub2 """.format(exchange,cur_pair,n)
+    cursor = db.cursor()
+    cursor.execute(sql)
+    lines = cursor.fetchall()
+    prices = [ e[0] for e in lines ]
+    return prices;
 
 # pcs: prices to simulate in the form coinB/coinA
 # cna: coinA
@@ -302,6 +304,68 @@ def getevm():
 
     return evm
 
+
+def loadevm(f):
+
+    mtt = []
+    mtt.append( map(float,f.readline().split()) )
+    mtt.append( map(int,f.readline().split()) )
+    mtt.append( map(float,f.readline().split()) )
+
+    pcf = [ [] ] + map(float,f.readline().split())
+
+    lms = []
+    lms.append( map(float,f.readline().split()) )
+    lms.append( map(int,f.readline().split()) )
+    lms.append( map(float,f.readline().split()) )
+
+    rds = map(int,f.readline().split())
+
+    frd = int(f.readline())
+
+    evm = {}
+    evm['mtt'] = mtt
+    evm['pcf'] = pcf
+    evm['lms'] = lms
+    evm['rds'] = rds
+    evm['frd'] = frd
+
+    return evm
+
+
+def dumpevm():
+    f = open('../rsc/evmdump.txt','w')
+
+    # mutations, mtt
+    difs =  [ (i+1)/10000 for i in range(10)]
+    difs = difs + [-v for v in difs]
+    print(*difs,file=f)
+
+    idifs = [ (i+1)*10 for i in range(10)] 
+    idifs = idifs + [-v for v in idifs]
+    print(*idifs,file=f)
+
+    difs =  [ (i+1)/1000 for i in range(10)]
+    difs = difs + [-v for v in difs]
+    print(*difs,file=f)
+
+    # coins and fee, pcf
+    print(100,0.001,file=f)
+
+    # limits, lms
+    print(0.008,0.015,file=f)
+    print(700,1000,file=f)
+    print(0.3,0.1,file=f)
+
+    # rounding values for genes, rds
+    print(5,5,5,file=f) 
+
+    # rounding for fitness, frd
+    print(8,file=f)
+
+    f.close()
+
+
 # Generates a new random gen
 def born(evm):
     gen = []
@@ -326,7 +390,6 @@ def evalgens(spc,ngens,evm):
     gn,gen = -spc[0], spc[1]
     nspcs = []
     for ngen in ngens:
-        print('evaluating:',ngen)
         ngn = fitness(ngen,evm)
         if ngn>gn:
             nspcs.append((-ngn,ngen))
@@ -339,18 +402,13 @@ def evalworker(adr):
     while True:
         soc,cli = ss.accept()
         evm = play.recv(soc)
-        print('evm received')
         while True:
-            print('waiting nspcs...')
             pack = play.recv(soc)
-            print('pack received')
             if pack=='end':
                 break
             spc,ngens = pack
-            print('ngens received:',len(ngens))
             nscps = evalgens(spc,ngens,evm)
             play.send(soc,nscps)
-            print('nscps sent back')
 
 def getadjs(spc, vis, evm):
     adjs = []
@@ -367,14 +425,11 @@ def getadjs(spc, vis, evm):
                 adjs.append(ngen)
     return adjs
 
-
 def sendslice(spc,slc,soc,q):
     pack = (spc,slc)
     play.send(soc,pack)
     nspcs = play.recv(soc)
     q.put(nspcs)
-
-
 
 # psm: perfect specimens
 # rps number of  repetitions of the while
@@ -389,19 +444,16 @@ def perfect(spc, adrs, evm):
         soc.connect(adr)
         socs.append(soc)
     # Sending environment to workers
-    print('sending evm')
     for soc in socs:
         play.send(soc,evm)
     # Defining objects for the dfs
-    st, psm, vis, rps = [], {}, set(), 15
+    st, psm, vis, rps = [], {}, set(), 10
     hp.heappush(st, spc)
     vis.add(spc[1])
     while len(st)>0 and len(psm)<3 and rps>0:
-        print('psm, rps',len(psm),rps)
         # Getting adjacent elements
         spc = hp.heappop(st)
         adjs = getadjs(spc,vis,evm)
-        print('adjs:',len(adjs))
         # Dividing adjacent specimens into slices
         sn = len(socs)
         slcs = [ [] for i in range(sn) ]
@@ -410,12 +462,10 @@ def perfect(spc, adrs, evm):
         ths,q = [],queue.Queue()
         # Sending slices to workers and waiting them to finish
         for i in range(sn):
-            print('sending slice')
             ths.append( play.mkthread(sendslice, (spc,slcs[i],socs[i],q)) )
         for th in ths:
             th.join()
         # Gathering the result from the workers
-        print('gathering slices')
         nspcs = []
         while q.qsize()>0:
             nspcs.extend(q.get())
@@ -424,20 +474,45 @@ def perfect(spc, adrs, evm):
             hp.heappush(st,nspc)
             vis.add(nspc[1])
         if len(nspcs)==0:
-            psm[ spc[0] ] = spc[1]
+            if -spc[0]>0:
+                psm[ spc[0] ] = spc[1]
         rps -= 1
-    play.send(soc,'end')
+    for soc in socs:
+        play.send(soc,'end')
     return psm
 
 # pps : population
-def populate(evm):
+def populate(evm,adrs):
     print('populating...')
     pps = {}
-    for i in range(5):
+    for i in range(6):
         spc = born(evm)
-        psm = perfect(spc,[('localhost',50001),('localhost',50002)],evm)
+        psm = perfect(spc,adrs,evm)
         pps.update(psm)
     return pps
+
+def train(conf):
+    f = open(conf,'r')
+    exchange, cur_pair = f.readline().split()
+    rng, wdt, ofs = map(int,f.readline().split()) # total price range, width, offset
+    ns = int(f.readline())
+    adrs = []
+    for i in range(ns):
+        adr = f.readline().split()
+        adr[1] = int(adr[1])
+        adrs.append(adr)
+    evm = loadevm(f)
+    f.close()
+    # load prices from db
+    db = pymysql.connect('localhost','root','root','pricer')
+    tpcs = lastnprices(rng,exchange,cur_pair)
+    ini = 0
+    while ini<len(tpcs):
+        pcs = tpcs[ini:] if len(tpcs)-ini-wdt<wdt else tpcs[ini:ini+wdt]
+        ini += ofs
+        evm['pcf'][0] = pcs
+        
+
 
 
 
@@ -494,6 +569,10 @@ def test():
 
 
 if __name__ == '__main__':
+
+    dumpevm()
+    exit(1)
+
     if sys.argv[1]=='0':
         test5()
     else:
