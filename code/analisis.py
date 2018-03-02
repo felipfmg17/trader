@@ -528,7 +528,7 @@ def train(conf):
             gn = -gn
             pcf = evm['pcf'][:]
             pcf[0] = tpcs
-            prm = pcf + gen
+            prm = pcf + list(gen)
             tgn = sim(*prm)
             print(tgn,gn,gen)
 
@@ -594,5 +594,5 @@ if __name__ == '__main__':
     if sys.argv[1]=='0':
         train('../rsc/conf_xrp_4days.txt')
     else:
-        evalworker(('localhost',int(sys.argv[1])))
+        evalworker((sys.argv[1],int(sys.argv[2])))
 
