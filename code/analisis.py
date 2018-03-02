@@ -394,6 +394,7 @@ def getadjs(spc, vis, evm):
             ngen = tuple(ngen)
             lms = evm['lms']
             if ngen[i]>=lms[i][0] and ngen[i]<=lms[i][1] and ngen not in vis:
+                vis.add(ngen)
                 adjs.append(ngen)
     return adjs
 
@@ -427,6 +428,7 @@ def perfect(spc, adrs, evm):
         # Getting adjacent elements
         spc = hp.heappop(st)
         adjs = getadjs(spc,vis,evm)
+        print('vis:',vis)
         # Dividing adjacent specimens into slices
         sn = len(socs)
         slcs = [ [] for i in range(sn) ]
@@ -445,7 +447,6 @@ def perfect(spc, adrs, evm):
         # Analizing the results
         for nspc in nspcs:
             hp.heappush(st,nspc)
-            vis.add(nspc[1])
         if len(nspcs)==0:
             if -spc[0]>0:
                 psm[ spc[0] ] = spc[1]
