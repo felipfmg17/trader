@@ -263,47 +263,6 @@ def simg(pcs, cna, fee, aph, tm, ptg):
     plt.plot(ems)
     plt.show()
 
-def getevm():
-    #random.seed(time.time())
-
-    mtt = []
-    difs =  [ (i+1)/10000 for i in range(10)]
-    difs = difs + [-v for v in difs]
-    mtt.append(difs)
-
-    idifs = [ (i+1)*10 for i in range(10)] 
-    idifs = idifs + [-v for v in idifs]
-    mtt.append(idifs)
-
-    difs =  [ (i+1)/1000 for i in range(10)]
-    difs = difs + [-v for v in difs] 
-    mtt.append(difs)
-
-    d0, d1 = 1517103819, 1519516817
-    pm = Priceman(d0,d1)
-    pcs = pm.gets(pm.pm['week2'] , pm.pm['day']*4)
-    pcf = [pcs, 100, 0.001]
-
-
-    # limits
-    lms = []
-    lms.append((0.008, 0.015))  # alpha for EMA smoothing
-    #lms.append((20,30))     # minutes
-    lms.append((700, 1000))     # minutes
-    lms.append((0.03, 0.10))   # percentage
-
-    # rounding values
-    rds = [5,5,5]
-
-    evm = {}
-    evm['mtt'] = mtt  # mutation table
-    evm['pcf'] = pcf  # prices, coins, fees
-    evm['lms'] = lms  # limits
-    evm['rds'] = rds  #rounding values
-    evm['frd'] = 8  # rounding for fitness
-
-    return evm
-
 
 def loadevm(f):
 
@@ -331,7 +290,6 @@ def loadevm(f):
     evm['frd'] = frd
 
     return evm
-
 
 def dumpevm():
     f = open('../rsc/evmdump.txt','w')
@@ -410,7 +368,7 @@ def evalworker(adr):
             print('Environment received\n')
             cont = 1
             while True:
-                print(cont,' Waiting for job ...')
+                print(cont,' Waiting for job')
                 cont += 1
                 pack = play.recv(soc)
                 if pack=='end':
@@ -511,8 +469,9 @@ def populate(evm,adrs):
         pps.update(psm)
     return pps
 
-def train(conf):
+def train(conf,result):
     f = open(conf,'r')
+    g = open(result,'w')
     exchange, cur_pair = f.readline().split()
     rng, wdt, ofs = map(int,f.readline().split()) # total price range, width, offset
     ns = int(f.readline())
@@ -538,52 +497,9 @@ def train(conf):
             prm = pcf + list(gen)
             tgn = sim(*prm)
             print(tgn,gn,gen)
+            print(tgn,gn,gen,file=g)
+    g.close()
 
-
-
-
-
-
-def test5():
-    evm = getevm()
-    d0, d1 = 1517103819, 1519516817
-    pm = Priceman(d0,d1)
-    pcs = []
-    pcf = [pcs, 100, 0.001]
-
-    tpps = {}
-    n = len(pm.pcs)
-    ini = 0
-    offs = 60*24
-    while ini+offs<n:
-        pcs = pm.gets(ini,offs)
-        ini += offs
-        pcf[0] = pcs
-        evm['pcf'] = pcf
-        pps = populate(evm)
-        print(pps)
-        tpps.update(pps)
-
-    pcs = pm.gets( 0 , 'full' )
-    pcf[0] = pcs
-    for k,v in tpps.items():
-        prm = pcf + list(v)
-        print(k,v,sim(*prm))
-        print()
-
-
-    tpps = [ (k,v) for k,v in tpps.items() ]
-    tpps = sorted(tpps)
-    print('Perfects specimens from 4 days environments during 3 weeks')
-    print(tpps)
-
-    s = ''
-    for spc in tpps:
-        s += str(spc[0]) + ' ' + str(spc[1]) + '\n'
-
-    fout = open('perfs.txt','w')
-    fout.write(s)
-    fout.close()
 
 def test():
     d0, d1 = 1517103819, 1519516817
@@ -599,7 +515,7 @@ def test():
 if __name__ == '__main__':
 
     if sys.argv[1]=='0':
-        train('../rsc/conf_xrp_4days.txt')
+        train('../rsc/conf_xrp_4days.txt','../rsc/result_xrp_4days.txt')
     else:
         evalworker((sys.argv[1],int(sys.argv[2])))
 
