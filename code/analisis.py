@@ -308,18 +308,18 @@ def getevm():
 def loadevm(f):
 
     mtt = []
-    mtt.append( map(float,f.readline().split()) )
-    mtt.append( map(int,f.readline().split()) )
-    mtt.append( map(float,f.readline().split()) )
+    mtt.append( list(map(float,f.readline().split())) )
+    mtt.append( list(map(int,f.readline().split())) )
+    mtt.append( list(map(float,f.readline().split())) )
 
-    pcf = [ [] ] + map(float,f.readline().split())
+    pcf = [ [] ] + list(map(float,f.readline().split()))
 
     lms = []
-    lms.append( map(float,f.readline().split()) )
-    lms.append( map(int,f.readline().split()) )
-    lms.append( map(float,f.readline().split()) )
+    lms.append( list(map(float,f.readline().split())) )
+    lms.append( list(map(int,f.readline().split())) )
+    lms.append( list(map(float,f.readline().split())) )
 
-    rds = map(int,f.readline().split())
+    rds = list(map(int,f.readline().split()))
 
     frd = int(f.readline())
 
@@ -399,16 +399,25 @@ def evalworker(adr):
     ss = socket.socket()
     ss.bind(adr)
     ss.listen(1)
-    while True:
-        soc,cli = ss.accept()
-        evm = play.recv(soc)
+    print('Evalworker started at port:',adr[1],'\n')
+    with ss:
         while True:
-            pack = play.recv(soc)
-            if pack=='end':
-                break
-            spc,ngens = pack
-            nscps = evalgens(spc,ngens,evm)
-            play.send(soc,nscps)
+            soc,cli = ss.accept()
+            evm = play.recv(soc)
+            print('Environment received\n')
+            while True:
+                print('Waiting for job ...')
+                pack = play.recv(soc)
+                if pack=='end':
+                    break
+                print('Adjs received, size:',len(pack[1]) )
+                spc,ngens = pack
+                nscps = evalgens(spc,ngens,evm)
+                play.send(soc,nscps)
+                print('Adjs processed, nspcs sent\n')
+            print('Environment finished\n\n')
+        soc.close()
+
 
 def getadjs(spc, vis, evm):
     adjs = []
@@ -434,9 +443,9 @@ def sendslice(spc,slc,soc,q):
 # psm: perfect specimens
 # rps number of  repetitions of the while
 # st for the priority queue
-# vis is a set of gens
+# vis is a set of gens 
 def perfect(spc, adrs, evm):
-    print('perfecting')
+    print('Perfecting')
     # Creating sockets for workers
     socs = []
     for adr in adrs:
@@ -450,7 +459,9 @@ def perfect(spc, adrs, evm):
     st, psm, vis, rps = [], {}, set(), 10
     hp.heappush(st, spc)
     vis.add(spc[1])
+    print('rps,psm :',end='',flush=True)
     while len(st)>0 and len(psm)<3 and rps>0:
+        print((rps,len(psm)),' ',end='',flush=True)
         # Getting adjacent elements
         spc = hp.heappop(st)
         adjs = getadjs(spc,vis,evm)
@@ -479,11 +490,13 @@ def perfect(spc, adrs, evm):
         rps -= 1
     for soc in socs:
         play.send(soc,'end')
+    print('\nperfect finished:', psm )
+    print()
     return psm
 
 # pps : population
 def populate(evm,adrs):
-    print('populating...')
+    print('POPULATING \n')
     pps = {}
     for i in range(6):
         spc = born(evm)
@@ -500,18 +513,26 @@ def train(conf):
     for i in range(ns):
         adr = f.readline().split()
         adr[1] = int(adr[1])
-        adrs.append(adr)
+        adrs.append(tuple(adr))
     evm = loadevm(f)
     f.close()
     # load prices from db
-    db = pymysql.connect('localhost','root','root','pricer')
     tpcs = lastnprices(rng,exchange,cur_pair)
     ini = 0
     while ini<len(tpcs):
         pcs = tpcs[ini:] if len(tpcs)-ini-wdt<wdt else tpcs[ini:ini+wdt]
         ini += ofs
         evm['pcf'][0] = pcs
-        
+        pps = populate(evm,adrs)
+        for gn,gen in pps.items():
+            gn = -gn
+            pcf = evm['pcf'][:]
+            pcf[0] = tpcs
+            prm = pcf + gen
+            tgn = sim(*prm)
+            print(tgn,gn,gen)
+
+
 
 
 
@@ -570,11 +591,8 @@ def test():
 
 if __name__ == '__main__':
 
-    dumpevm()
-    exit(1)
-
     if sys.argv[1]=='0':
-        test5()
+        train('../rsc/conf_xrp_4days.txt')
     else:
         evalworker(('localhost',int(sys.argv[1])))
 
