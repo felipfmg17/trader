@@ -387,12 +387,15 @@ def fitness(gen,evm):
     return round( sim(*pms), evm['frd'] )
 
 def evalgens(spc,ngens,evm):
+    print('Evaluating: ',end='',flush=True)
     gn,gen = -spc[0], spc[1]
     nspcs = []
     for ngen in ngens:
+        print('.',end='',flush=True)
         ngn = fitness(ngen,evm)
         if ngn>gn:
             nspcs.append((-ngn,ngen))
+    print()
     return nspcs
 
 def evalworker(adr):
@@ -405,8 +408,10 @@ def evalworker(adr):
             soc,cli = ss.accept()
             evm = play.recv(soc)
             print('Environment received\n')
+            cont = 1
             while True:
-                print('Waiting for job ...')
+                print(cont,' Waiting for job ...')
+                cont += 1
                 pack = play.recv(soc)
                 if pack=='end':
                     break
@@ -445,7 +450,6 @@ def sendslice(spc,slc,soc,q):
 # st for the priority queue
 # vis is a set of gens 
 def perfect(spc, adrs, evm):
-    print('Perfecting')
     # Creating sockets for workers
     socs = []
     for adr in adrs:
@@ -498,8 +502,11 @@ def perfect(spc, adrs, evm):
 def populate(evm,adrs):
     print('POPULATING \n')
     pps = {}
+    cont = 1
     for i in range(6):
         spc = born(evm)
+        print('Perfecting:',cont)
+        cont += 1
         psm = perfect(spc,adrs,evm)
         pps.update(psm)
     return pps
