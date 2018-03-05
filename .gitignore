@@ -1,3 +1,6 @@
 .idea/
 pricer/nohup.out
+pricer/code/nohup.out
+pricer/code/__pycache__
+
 

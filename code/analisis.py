@@ -60,7 +60,7 @@ class Ratio:
 
         # searching for high values
         lim = v/(1-ptg)
-        it = tr.maximun
+        it = tr.maximum
         while it and it.key>=lim:
             for e in it.value:
                 u = (e-ini+n)%n
@@ -72,6 +72,7 @@ class Ratio:
         u = None
         if len(inds)>0:
             u = (max(inds)+ini)%n
+            print('u:',u)
             if vals[u]>v:
                 s = -1
             elif vals[u]<v:
@@ -80,14 +81,15 @@ class Ratio:
 
         # deleting elements before inflection point
         if u!=None:
-            for i range((u-ini+n)%n):
+            for i in range((u-ini+n)%n):
                 t = (i+ini)%n
                 pv = vals[t]
+                print('pv:',pv,t)
                 mp = tr[pv]
                 mp.remove(t)
                 if len(mp)==0:
                     del tr[pv]
-            self.ini = v
+            self.ini = u
 
         # deleting first element in case the stack is full
         if ini==fin:
@@ -97,17 +99,16 @@ class Ratio:
             if len(mp)==0:
                 del tr[pv]
 
-         # add ind and v to tr
+         # add fin and v to tr
         if v not in tr:
             tr[v] = set()
         tr[v].add(fin)
+        print('insertando:',v,fin)
         vals[fin] = v
         self.fin = (fin+1)%n
 
         return s
 
-
- 
     def nextt(self,v):
         vals,n,ind,ptg,tr = self.vals,self.n,self.ind,self.ptg,self.tr
         inds = []
@@ -445,7 +446,6 @@ def evalworker(adr):
             print('Environment finished\n\n')
         soc.close()
 
-
 def getadjs(spc, vis, evm):
     adjs = []
     for i in range(len(spc[1])):
@@ -474,11 +474,14 @@ def sendslice(spc,slc,soc,q):
 # vis is a set of gens 
 def perfect(spc, adrs, evm):
     # Creating sockets for workers
+    print('perfect')
     socs = []
+    print('dirs:',adrs)
     for adr in adrs:
         soc = socket.socket()
         soc.connect(adr)
         socs.append(soc)
+        print('soc')
     # Sending environment to workers
     for soc in socs:
         play.send(soc,evm)
@@ -523,13 +526,16 @@ def perfect(spc, adrs, evm):
 
 # pps : population
 def populate(evm,adrs):
-    print('POPULATING \n')
+    print('POPULATING ggggg \n')
     pps = {}
     cont = 1
+    print('desconocido')
     for i in range(6):
         spc = born(evm)
-        print('Perfecting:',cont)
+        print('Perfecting:\n',cont)
         cont += 1
+        print('entrando')
+        time.sleep(10)
         psm = perfect(spc,adrs,evm)
         pps.update(psm)
     return pps
@@ -578,7 +584,6 @@ def test():
 
 
 if __name__ == '__main__':
-
     if sys.argv[1]=='0':
         train('../rsc/conf_xrp_4days.txt','../rsc/result_xrp_4days.txt')
     else:
