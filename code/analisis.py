@@ -35,7 +35,8 @@ class Ratio:
     def __init__(self,vals,ptg):
         self.n = len(vals)
         self.vals = vals[:]
-        self.ind = 0
+        self.ini = 0
+        self.fin = 0
         self.ptg = ptg
         tr = RedBlackTree()
         for i in range(self.n):
@@ -45,6 +46,69 @@ class Ratio:
         self.tr = tr
 
     def next(self,v):
+        vals,n,ini,fin,ptg,tr = self.vals,self.n,self.ini,self.fin,self.ptg,self.tr
+        inds = []
+
+        # searching for low values
+        lim = v/(1+ptg)
+        it = tr.minimum
+        while it and it.key<=lim:
+            for e in it.value:
+                u = (e-ini+n)%n
+                inds.append(u)
+            it = it.successor
+
+        # searching for high values
+        lim = v/(1-ptg)
+        it = tr.maximun
+        while it and it.key>=lim:
+            for e in it.value:
+                u = (e-ini+n)%n
+                inds.append(u)
+            it = it.predecessor
+
+        # get the last added value from inds
+        s = 0
+        u = None
+        if len(inds)>0:
+            u = (max(inds)+ini)%n
+            if vals[u]>v:
+                s = -1
+            elif vals[u]<v:
+                s = 1
+
+
+        # deleting elements before inflection point
+        if u!=None:
+            for i range((u-ini+n)%n):
+                t = (i+ini)%n
+                pv = vals[t]
+                mp = tr[pv]
+                mp.remove(t)
+                if len(mp)==0:
+                    del tr[pv]
+            self.ini = v
+
+        # deleting first element in case the stack is full
+        if ini==fin:
+            pv = vals[ini]
+            mp = tr[pv]
+            mp.remove(ini)
+            if len(mp)==0:
+                del tr[pv]
+
+         # add ind and v to tr
+        if v not in tr:
+            tr[v] = set()
+        tr[v].add(fin)
+        vals[fin] = v
+        self.fin = (fin+1)%n
+
+        return s
+
+
+ 
+    def nextt(self,v):
         vals,n,ind,ptg,tr = self.vals,self.n,self.ind,self.ptg,self.tr
         inds = []
 
@@ -65,6 +129,8 @@ class Ratio:
                 u = (e-ind+n)%n
                 inds.append(u)
             it = it.predecessor
+
+
 
 
         # get the last added value from inds
@@ -263,7 +329,6 @@ def simg(pcs, cna, fee, aph, tm, ptg):
     plt.plot(ems)
     plt.show()
 
-
 def loadevm(f):
 
     mtt = []
@@ -322,7 +387,6 @@ def dumpevm():
     print(8,file=f)
 
     f.close()
-
 
 # Generates a new random gen
 def born(evm):
