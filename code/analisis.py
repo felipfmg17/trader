@@ -31,11 +31,14 @@ def calcEMA(vals,a):
 
 # Ratio using Red Black Tree
 # returns 1: buy, 0: do nothing, -1: sells
+# tr is a bst, keys are integers representing the price
+# the value is a set containing indexes from vals
 class Ratio:
     def __init__(self,vals,ptg):
         self.n = len(vals)
         self.vals = vals[:]
-        self.ind = 0
+        self.ini = 0
+        self.fin = 0
         self.ptg = ptg
         tr = RedBlackTree()
         for i in range(self.n):
@@ -45,7 +48,7 @@ class Ratio:
         self.tr = tr
 
     def next(self,v):
-        vals,n,ind,ptg,tr = self.vals,self.n,self.ind,self.ptg,self.tr
+        vals,n,ini,fin,ptg,tr = self.vals,self.n,self.ini,self.fin,self.ptg,self.tr
         inds = []
 
         # searching for low values
@@ -53,7 +56,7 @@ class Ratio:
         it = tr.minimum
         while it and it.key<=lim:
             for e in it.value:
-                u = (e-ind+n)%n
+                u = (e-ini+n)%n
                 inds.append(u)
             it = it.successor
 
@@ -62,33 +65,50 @@ class Ratio:
         it = tr.maximum
         while it and it.key>=lim:
             for e in it.value:
-                u = (e-ind+n)%n
+                u = (e-ini+n)%n
                 inds.append(u)
             it = it.predecessor
 
 
-        # get the last added value from inds
-        s = 0
-        if len(inds)>0:
-            u = (max(inds)+ind)%n
-            if vals[u]>v:
-                s = -1
-            elif vals[u]<v:
-                s = 1
+        # get the last added value from inds which compares outside the percentage limits
+        bix = (max(inds)+ini)%n if len(inds)>0 else None
 
-        # remove ind and vals[ind] from tr
-        pv = vals[ind]
-        mp = tr[pv]
-        mp.remove(ind)
-        if len(mp)==0:
-            del tr[pv]
+
+        s = 0
+        if bix!=None:
+            # Calculating the answer
+            if vals[bix]>v:
+                s = -1
+            elif vals[bix]<v:
+                s = 1
+        
+            # Deleting prices before bix
+            stp = (bix-ini+n)%n
+            for i in range(stp):
+                ind = (i+ini)%n
+                pv = vals[ind]
+                mp = tr[pv]
+                mp.remove(ind)
+                if len(mp)==0:
+                    del tr[pv]
+            self.ini = bix
+
+        # remove ini and vals[ini] from tr
+        if self.ini==self.fin:
+            ind = self.ini
+            pv = vals[ind]
+            mp = tr[pv]
+            mp.remove(ind)
+            if len(mp)==0:
+                del tr[pv]
+            self.ini = (self.ini+1)%n
 
         # add ind and v to tr
         if v not in tr:
             tr[v] = set()
-        tr[v].add(ind)
-        vals[ind] = v
-        self.ind = (ind+1)%n
+        tr[v].add(fin)
+        vals[fin] = v
+        self.fin = (fin+1)%n
 
         return s
 
@@ -428,7 +448,6 @@ def perfect(spc, adrs, evm):
         # Getting adjacent elements
         spc = hp.heappop(st)
         adjs = getadjs(spc,vis,evm)
-        print('vis:',vis)
         # Dividing adjacent specimens into slices
         sn = len(socs)
         slcs = [ [] for i in range(sn) ]
