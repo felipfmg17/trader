@@ -98,7 +98,8 @@ ON a.currency_pair_id = b.id
 JOIN exchange as c
 ON a.exchange_id = c.id
 WHERE c.name = 'bitfinex'
-AND b.name = 'xrp_usd';
+AND b.name = 'xrp_usd'
+AND a.date_time_sec > 1515912153;
 
 
 SELECT a.date_time_sec as Seconds, a.date_time as Date, b.name as "Currency Pair" , c.name as Exchange , a.price as Price

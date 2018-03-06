@@ -184,7 +184,7 @@ class Priceman:
 
 
 def lastnprices(n, exchange, cur_pair):
-    db = pymysql.connect('localhost','root','root','pricer')
+    db = pymysql.connect('192.168.0.4','root','root','pricer')
     sql = """ SELECT Price  FROM (
     SELECT * FROM (
     SELECT  a.price as Price, a.date_time_sec as Seconds
@@ -342,7 +342,6 @@ def dumpevm():
     print(8,file=f)
 
     f.close()
-
 
 # Generates a new random gen
 def born(evm):
@@ -505,6 +504,7 @@ def train(conf,result):
     # load prices from db
     tpcs = lastnprices(rng,exchange,cur_pair)
     ini = 0
+    res = []
     while ini<len(tpcs):
         pcs = tpcs[ini:] if len(tpcs)-ini-wdt<wdt else tpcs[ini:ini+wdt]
         ini += ofs
@@ -517,25 +517,30 @@ def train(conf,result):
             prm = pcf + list(gen)
             tgn = sim(*prm)
             print(tgn,gn,gen)
-            print(tgn,gn,gen,file=g)
+            res.append([tgn,gn,gen])
+    res = sorted(res)
+    for e in res:
+        print(*e,file=g)
     g.close()
 
 
 def test():
-    d0, d1 = 1517103819, 1519516817
-    pm = Priceman(d0,d1)
-    #pcs = pm.gets(pm.pm['week2'] , pm.pm['day']*4 )
-    pcs = pm.gets(pm.pm['zero'] , pm.pm['full'] )
+    pcs = lastnprices(48430,'bitfinex','xrp_usd')
     pcf = [pcs,100,0.001]
-    gen = [0.00874, 867, 0.03295]
+    gen = [0.01164, 747, 0.03606]
     prm = pcf + gen
+    gn = sim(*prm)
+    print(gn)
     simg(*prm)
+
 
 
 if __name__ == '__main__':
 
     if sys.argv[1]=='0':
         train('../rsc/conf_xrp_4days.txt','../rsc/result_xrp_4days.txt')
+    elif sys.argv[1]=='1':
+        test()
     else:
         evalworker((sys.argv[1],int(sys.argv[2])))
 
