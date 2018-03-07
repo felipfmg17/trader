@@ -20,7 +20,7 @@ class EMA:
 	def next(self,v):
 		s,a = self.s, self.a
 		self.s = v if s==None else a*v + (1-a)*s
-		return round(self.s,3)
+		return round(self.s,5)
 
 def calcEMA(vals,a):
     series = [vals[0]]
@@ -69,10 +69,8 @@ class Ratio:
                 inds.append(u)
             it = it.predecessor
 
-
         # get the last added value from inds which compares outside the percentage limits
         bix = (max(inds)+ini)%n if len(inds)>0 else None
-
 
         s = 0
         if bix!=None:
@@ -135,53 +133,6 @@ class Ratiog:
         vals[ind] = v
         self.ind = (ind+1)%n
         return s
-
-class Priceman:
-    def __init__(self,d0,d1):
-        self.pcs = self.loadPrices(d0,d1)
-        pm = {}
-        pm['zero'] = 0
-        pm['hour'] = 60
-        pm['hour8'] = pm['hour']*8
-        pm['day'] = pm['hour']*24
-        pm['day3'] = pm['day']*3
-        pm['day5'] = pm['day']*5
-        pm['week'] = pm['day']*7
-        pm['week2'] = pm['week']*2
-        pm['week3'] = pm['week']*3
-        pm['full'] = 'full'
-        self.pm = pm
-
-    def get(self,ini,s):
-        return self.pcs[self.pm[ini]:self.pm[ini]+self.pm[s]]
-
-    def gets(self,ini,s):
-        if s=='full':
-            return self.pcs[ ini: ]
-        return self.pcs[ ini : ini+s ]
-
-    
-
-    # load prices from database from date d0
-    # to d1, dates are given in secons from epoch
-    def loadPrices(self,d0,d1):
-        db = pymysql.connect('localhost','root','root','pricer')
-        sql = """ SELECT  a.price as Price
-        FROM coin_price as a
-        JOIN currency_pair as b
-        ON a.currency_pair_id = b.id
-        JOIN exchange as c
-        ON a.exchange_id = c.id
-        WHERE c.name = \"bitso\"
-        AND b.name = \"xrp_mxn\" """
-        sql += ' AND a.date_time_sec > '  + str(d0)
-        sql += ' AND a.date_time_sec < '  + str(d1)
-        cursor = db.cursor()
-        cursor.execute(sql)
-        lines = cursor.fetchall()
-        prices = [ e[0] for e in lines ]
-        return prices;
-
 
 def lastnprices(n, exchange, cur_pair):
     db = pymysql.connect('192.168.0.4','root','root','pricer')
@@ -282,7 +233,6 @@ def simg(pcs, cna, fee, aph, tm, ptg):
     plt.plot(pcs)
     plt.plot(ems)
     plt.show()
-
 
 def loadevm(f):
 
@@ -399,7 +349,6 @@ def evalworker(adr):
                 print('Adjs processed, nspcs sent\n')
             print('Environment finished\n\n')
         soc.close()
-
 
 def getadjs(spc, vis, evm):
     adjs = []
@@ -523,7 +472,6 @@ def train(conf,result):
         print(*e,file=g)
     g.close()
 
-
 def test():
     pcs = lastnprices(48430,'bitfinex','xrp_usd')
     pcf = [pcs,100,0.001]
@@ -532,7 +480,6 @@ def test():
     gn = sim(*prm)
     print(gn)
     simg(*prm)
-
 
 
 if __name__ == '__main__':
