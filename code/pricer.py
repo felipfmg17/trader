@@ -127,7 +127,7 @@ class ErrorState:
         self.bkt = {}
 
     def setmsg(self,msg):
-        self.lk.acquire():
+        self.lk.acquire()
         if msg not in self.bkt:
             self.bkt[msg] = 0
         self.bkt[msg] += 1
@@ -135,14 +135,14 @@ class ErrorState:
 
     def getmsg(self):
         msg = ''
-        self.lk.acquire():
+        self.lk.acquire()
         for u,v in self.bkt.items():
             msg += u + ' ' + str(v) +'\n'
         self.lk.release()
         return msg
 
     def reset(self):
-        self.lk.acquire():
+        self.lk.acquire()
         self.bkt = {}
         self.lk.release()
 
