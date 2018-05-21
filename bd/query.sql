@@ -61,8 +61,11 @@ ON a.exchange_id = c.id
 WHERE c.name = 'bitfinex'
 AND b.name = 'xrp_usd'
 ORDER BY Seconds DESC
-LIMIT 10 ) sub
+LIMIT 149575 ) sub
 ORDER BY Seconds ASC;
+
+
+/* lastnprices query in analisis */
 
 SELECT Price  FROM (
 SELECT * FROM (
@@ -89,6 +92,18 @@ JOIN exchange as c
 ON a.exchange_id = c.id
 WHERE c.name = 'bitfinex'
 AND b.name = 'xrp_usd';
+
+/* count rows until january 27 */
+
+SELECT count(*)
+FROM coin_price as a
+JOIN currency_pair as b
+ON a.currency_pair_id = b.id
+JOIN exchange as c
+ON a.exchange_id = c.id
+WHERE c.name = 'bitfinex'
+AND b.name = 'xrp_usd'
+AND a.date_time_sec>1515912093;
 
 
 SELECT a.date_time_sec as Seconds, a.date_time as Date, b.name as "Currency Pair" , c.name as Exchange , a.price as Price

@@ -1,3 +1,4 @@
+localhost root root pricer
 bitfinex xrp_usd
 30000 5760 1440
 2

@@ -134,8 +134,9 @@ class Ratiog:
         self.ind = (ind+1)%n
         return s
 
-def lastnprices(n, exchange, cur_pair):
-    db = pymysql.connect('192.168.0.4','root','root','pricer')
+def lastnprices(db_prms, n, exchange, cur_pair):
+    db = pymysql.connect(*db_prms)
+    #db = pymysql.connect('localhost','root','root','pricer')
     sql = """ SELECT Price  FROM (
     SELECT * FROM (
     SELECT  a.price as Price, a.date_time_sec as Seconds
@@ -189,6 +190,7 @@ def simg(pcs, cna, fee, aph, tm, ptg):
     print('\nSIMULATING:')
     ema, dev, ems = EMA(aph), Ratio([pcs[0]] * tm, ptg), []
     ocna, cnb, sells, buys, fees = cna, 0, 0, 0, 0
+    lcna = None # last amount of coins A
 
     t0 = time.time()
 
@@ -198,25 +200,30 @@ def simg(pcs, cna, fee, aph, tm, ptg):
         ems.append(e)
         d = dev.next(e)
         if d==1 and cna>0 :
+            lcna = cna
             fees += cna * fee
             cna -= cna * fee
             cnb += cna / p
             cna = 0
             buys += 1
-            print('Buy:',i,p)
+            print('Buy:',str(i).ljust(8),('$'+str(p)).ljust(11)) 
         elif d==-1 and cnb>0 :
             cna = cnb * p
             cnb = 0
             fees += cna * fee
             cna -= cna * fee
             sells += 1
-            print('Sell:',i,p)
+
+            gain = (cna - ocna) / ocna
+            lgain = (cna-lcna)/lcna
+            print('Sell:',str(i).ljust(8),('$'+str(p)).ljust(11),(str(round(lgain*100,2))+'%').ljust(8),(str(round(gain*100,2))+'%').ljust(8))
     if cnb>0:
         cna = cnb * pcs[-1]
         fees += cna * fee
         cna -= cna * fee
         sells += 1
         print('Sell:',i,p)
+
     gain = (cna - ocna) / ocna
 
     print('time: ',round(time.time()-t0,3),'\n')
@@ -236,21 +243,22 @@ def simg(pcs, cna, fee, aph, tm, ptg):
 
 def loadevm(f):
 
+	# mutation table
     mtt = []
-    mtt.append( list(map(float,f.readline().split())) )
-    mtt.append( list(map(int,f.readline().split())) )
-    mtt.append( list(map(float,f.readline().split())) )
+    mtt.append( list(map(float,f.readline().split())) ) # ema smooth factor transformations
+    mtt.append( list(map(int,f.readline().split())) ) # size of the window of prices to consider
+    mtt.append( list(map(float,f.readline().split())) ) # percentage  threshold which triggers sell or buy
 
     pcf = [ [] ] + list(map(float,f.readline().split()))
 
     lms = []
-    lms.append( list(map(float,f.readline().split())) )
-    lms.append( list(map(int,f.readline().split())) )
-    lms.append( list(map(float,f.readline().split())) )
+    lms.append( list(map(float,f.readline().split())) ) # ema smooth limits
+    lms.append( list(map(int,f.readline().split())) ) # size of prices window limits
+    lms.append( list(map(float,f.readline().split())) ) # percentage limits
 
-    rds = list(map(int,f.readline().split()))
+    rds = list(map(int,f.readline().split())) # number of digits for rounding ema, prices window and percentage threshold
 
-    frd = int(f.readline())
+    frd = int(f.readline()) # number of digits for rounding fitness value
 
     evm = {}
     evm['mtt'] = mtt
@@ -443,6 +451,7 @@ def populate(evm,adrs):
 def train(conf,result):
     f = open(conf,'r')
     g = open(result,'w')
+    db_prms = f.readline().split()
     exchange, cur_pair = f.readline().split()
     rng, wdt, ofs = map(int,f.readline().split()) # total price range, width, offset
     ns = int(f.readline())
@@ -454,7 +463,7 @@ def train(conf,result):
     evm = loadevm(f)
     f.close()
     # load prices from db
-    tpcs = lastnprices(rng,exchange,cur_pair)
+    tpcs = lastnprices(db_prms,rng,exchange,cur_pair)
     ini = 0
     res = []
     while ini<len(tpcs):
@@ -476,9 +485,10 @@ def train(conf,result):
     g.close()
 
 def test():
-    pcs = lastnprices(48430,'bitfinex','xrp_usd')
+    db_prms = ('localhost','root','root','pricer') # server_ip user password database
+    pcs = lastnprices(db_prms,149575,'bitfinex','xrp_usd')
     pcf = [pcs,100,0.001]
-    gen = [0.01164, 747, 0.03606]
+    gen = [0.00933, 793, 0.07548]  # ema smooth, prices window, percentage threshold
     prm = pcf + gen
     gn = sim(*prm)
     print(gn)
@@ -488,7 +498,7 @@ def test():
 if __name__ == '__main__':
 
     if sys.argv[1]=='0':
-        train('../rsc/conf_xrp_4days.txt','../rsc/result_xrp_4days.txt')
+        train('../conf/train_xrp_4days_conf','../results/result_xrp_4days.txt')
     elif sys.argv[1]=='1':
         test()
     else:
