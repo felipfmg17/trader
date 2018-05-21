@@ -325,6 +325,7 @@ def evalgens(spc,ngens,evm):
     print()
     return nspcs
 
+# receives a pair (ip_addr, port)
 def evalworker(adr):
     ss = socket.socket()
     ss.bind(adr)
@@ -437,6 +438,8 @@ def populate(evm,adrs):
         pps.update(psm)
     return pps
 
+# conf: configuration file
+# file to store the results
 def train(conf,result):
     f = open(conf,'r')
     g = open(result,'w')

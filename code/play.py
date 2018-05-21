@@ -3,7 +3,11 @@ import sys
 import time
 import pickle
 import threading
+ 
 
+# Envia un objeto a traves de un socket
+# el objeto se enviar por cachos, automaticamente
+# se 
 def send(soc,obj):
 	msg = pickle.dumps(obj)
 	size = str(len(msg)).zfill(15).encode()
